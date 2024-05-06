@@ -25,7 +25,7 @@ public class Main {
         Consumer consumer = new Consumer();
 //        consumer.startConsuming();
 //        // Connecteer met Salesforce en stuur gegevens
-        consumer.connectToSalesforceAndSendData();
+        new Consumer.connectToSalesforceAndSendData();
 
 
 

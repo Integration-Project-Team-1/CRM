@@ -5,6 +5,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Base64;
 
+
 import com.force.api.ApiConfig;
 import com.force.api.ForceApi;
 import com.rabbitmq.client.*;
@@ -68,47 +69,55 @@ public class Consumer {
 
 
 
-        public void connectToSalesforceAndSendData() {
-            String SALESFORCE_USERNAME = "hamza.amghar@student.ehb.be";
-            String SALESFORCE_PASSWORD = "Event5431";
-            String SALESFORCE_SECURITY_TOKEN = "QdhyxDHRs9hyqkvhKwQfz4aLl";
-            String LOGIN_URL = "https://erasmushogeschool7-dev-ed.develop.my.salesforce.com";
-            String CONSUMER_KEY = "3MVG9PwZx9R6_UrfopP9UuSYm9.9btZdAiMG6rKyTdaV8nUXzfEiZJ9oT9XyY4lKvsxSv0W9L28QibW7MWtmD";
-            String CONSUMER_SECRET = "8F01848AA8E6016D0D1EEA3DC0BA2C0B270C0EF3106DFFAEE09CC384F058B10C";
 
-            // Combineer wachtwoord en beveiligingstoken
-            String loginPassword = SALESFORCE_PASSWORD + SALESFORCE_SECURITY_TOKEN;
+            public static class connectToSalesforceAndSendData() {
 
-            // Configureer de API-configuratie
-            ApiConfig config = new ApiConfig()
-                    .setClientId(CONSUMER_KEY)
-                    .setClientSecret(CONSUMER_SECRET)
-                    .setUsername(SALESFORCE_USERNAME)
-                    .setPassword(SALESFORCE_PASSWORD)
-                    .setLoginEndpoint(LOGIN_URL);
+                // Inloggegevens Salesforce
+                private static final String USERNAME = "ehberasmus@gmail.com";
+                private static final String PASSWORD = "Event5431";
+                private static final String SECURITY_TOKEN = "H1ODJnJb4guxN7Lwq5vIWdpWH";
+                private static final String CONSUMER_KEY = "3MVG9PwZx9R6_Urc1GPWYVjQmwHmXKY1pQ8t_W_Ql4VXOFeo_9tKJW3O8nLf0JJoMjrOuii6wZ8XdpCcJfOOA";
+                private static final String CONSUMER_SECRET = "BA7D5B9E3434948E1751C3C5B51BC366B8FD9165E3DCBD95A62AEF4D06B5C4C9";
+                private static final String INSTANCE_URL = "https://ehb-dev-ed.develop.my.salesforce.com";
 
-            ForceApi api = new ForceApi(config);
-            System.out.printf("ik werk ");
-            // Maak de gegevens voor de aan te maken Deelnemer
-            Map<String, Object> deelnemerFields = new HashMap<>();
-            System.out.println("test een ");
-            deelnemerFields.put("Name", "Mike Tyson");
-            System.out.println("test twee");
-            deelnemerFields.put("Leeftijd__c", 25);
-            System.out.println("test drie ");
-            deelnemerFields.put("Nummertelefoon__c", "0485009987");
-            System.out.println("test vier ");
-            deelnemerFields.put("Email__c", "miketyson@gmail.com");
-            System.out.println("test vijf ");
-            deelnemerFields.put("Bedrijf__c", "erasmus");
-            System.out.println("test last ");
+                public static void main(String[] args) {
+                    SalesforceConnection salesforceConnection = new SalesforceConnection();
+                    salesforceConnection.connectAndSendData();
+                }
 
-            // Maak de Deelnemer aan in Salesforce
-            api.createSObject("Deelnemer__c", deelnemerFields);
-            System.out.println("object createt");
-        }
+                static class SalesforceConnection {
 
+                    public void connectAndSendData() {
+                        // Inloggen bij Salesforce
+                        ApiConfig config = new ApiConfig()
+                                .setUsername(USERNAME)
+                                .setPassword(PASSWORD)
+                                .setClientId(CONSUMER_KEY)
+                                .setClientSecret(CONSUMER_SECRET)
+                                .setSecurityToken(SECURITY_TOKEN)
+                                .setLoginEndpoint(INSTANCE_URL);
 
+                        ForceApi api = new ForceApi(config);
+
+                        // Gegevens van deelnemer toevoegen
+                        Map<String, Object> deelnemerFields = new HashMap<>();
+                        deelnemerFields.put("Name", "Mike Tyson");
+                        deelnemerFields.put("Leeftijd__c", 25);
+                        deelnemerFields.put("Nummertelefoon__c", "0485009987");
+                        deelnemerFields.put("Email__c", "miketyson@gmail.com");
+                        deelnemerFields.put("Bedrijf__c", "erasmus");
+
+                        // Nieuwe deelnemer toevoegen aan Salesforce
+                        try {
+                            api.createSObject("Deelnemer__c", deelnemerFields);
+                            System.out.println("Deelnemer succesvol toegevoegd aan Salesforce.");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            System.out.println("Fout bij toevoegen deelnemer aan Salesforce.");
+                        }
+                    }
+                }
+            }
 }
 
 
