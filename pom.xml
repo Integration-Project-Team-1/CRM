@@ -106,7 +106,7 @@
         <dependency>
             <groupId>com.force.api</groupId>
             <artifactId>force-wsc</artifactId>
-            <version>60.0.0</version> <!-- De versie kan var afhankelijk van de Salesforce API-versie -->
+            <version>52.0.0</version> <!-- De versie kan var afhankelijk van de Salesforce API-versie -->
         </dependency>
 
         <dependency>
@@ -145,6 +145,17 @@
             <version>2.14.1</version> <!-- Gebruik hier dezelfde versie als log4j-api -->
         </dependency>
 
+        <!-- Maven dependency for Auth0 Java JWT -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>3.18.1</version> <!-- versie kan variëren -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
 
 
 

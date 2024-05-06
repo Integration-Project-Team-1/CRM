@@ -22,10 +22,7 @@ public class Main {
 //        }, 0, 5, TimeUnit.SECONDS);
 
 
-        Consumer consumer = new Consumer();
-//        consumer.startConsuming();
-//        // Connecteer met Salesforce en stuur gegevens
-        new Consumer.connectToSalesforceAndSendData();
+        Consumer.SalesforceIntegration.main(args);
 
 
 
