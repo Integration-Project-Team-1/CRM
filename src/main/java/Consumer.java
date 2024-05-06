@@ -34,26 +34,24 @@ public class Consumer {
     private Channel channel;
 
     //we create a connection within the constructor
-    public Consumer(){
+    public Consumer() {
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(host);
 
-        try{
+        try {
             Connection connection = factory.newConnection();
             channel = connection.createChannel();
 
             channel.queueDeclare(queueName, false, false, false, null);
-            channel.queueBind(queueName, exchangeName,routingKey); //use of the routing key to bind the queue to the exchange
+            channel.queueBind(queueName, exchangeName, routingKey); //use of the routing key to bind the queue to the exchange
 
 
-
-        }catch (Exception e){
+        } catch (Exception e) {
 
             e.getMessage();
             e.printStackTrace();
         }
-
 
 
     }
@@ -77,88 +75,93 @@ public class Consumer {
     }
 
 
+    public static void authenticateAndCallSalesforce() {
+        String loginUrl = "https://login.salesforce.com/services/oauth2/token";
+        String clientId = "3MVG9PwZx9R6_Urc1GPWYVjQmwHmXKY1pQ8t_W_Ql4VXOFeo_9tKJW3O8nLf0JJoMjrOuii6wZ8XdpCcJfOOA";
+        String clientSecret = "BA7D5B9E3434948E1751C3C5B51BC366B8FD9165E3DCBD95A62AEF4D06B5C4C9";
+        String username = "ehberasmus@gmail.com";
+        String password = "Event5431";
+        String securityToken = "H1ODJnJb4guxN7Lwq5vIWdpWH";
+        String tokenUrl = "https://ehb-dev-ed.develop.my.salesforce.com/services/apexrest/Account/";
 
-    public static class SalesforceIntegration {
-        public static void main(String[] args) {
-            String loginUrl = "https://login.salesforce.com/services/oauth2/token";
-            String clientId = "3MVG9PwZx9R6_Urc1GPWYVjQmwHmXKY1pQ8t_W_Ql4VXOFeo_9tKJW3O8nLf0JJoMjrOuii6wZ8XdpCcJfOOA";
-            String clientSecret = "BA7D5B9E3434948E1751C3C5B51BC366B8FD9165E3DCBD95A62AEF4D06B5C4C9";
-            String username = "ehberasmus@gmail.com";
-            String password = "Event5431";
-            String tokenUrl = "https://ehb-dev-ed.develop.my.salesforce.com/services/apexrest/Account/";
+        // Step 1: Authenticate and obtain access token
+        String accessToken = authenticate(loginUrl, clientId, clientSecret, username, password, securityToken);
 
-            // Step 1: Authenticate and obtain access token
-            String accessToken = authenticate(loginUrl, clientId, clientSecret, username, password);
-
-            // Step 2: Make RESTful API call to Salesforce
-            if (accessToken != null) {
-                createDeelnemer(tokenUrl, accessToken);
-            } else {
-                System.out.println("Failed to obtain access token. Authentication failed.");
-            }
+        // Step 2: Make RESTful API call to Salesforce
+        if (accessToken != null) {
+            String response = callSalesforceAPI(tokenUrl, accessToken);
+            System.out.println("Response from Salesforce API: " + response);
+        } else {
+            System.out.println("Failed to obtain access token. Authentication failed.");
         }
+    }
 
-        private static String authenticate(String loginUrl, String clientId, String clientSecret, String username, String password) {
-            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                HttpPost httpPost = new HttpPost(loginUrl);
-                httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
-                String credentials = clientId + ":" + clientSecret;
-                String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
-                httpPost.setHeader("Authorization", "Basic " + encodedCredentials);
-                StringEntity params = new StringEntity("grant_type=password&username=" + username + "&password=" + password);
-                httpPost.setEntity(params);
+    private static String authenticate(String loginUrl, String clientId, String clientSecret, String username, String password, String securityToken) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(loginUrl);
+            httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+            String credentials = clientId + ":" + clientSecret;
+            String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
+            httpPost.setHeader("Authorization", "Basic " + encodedCredentials);
+            StringEntity params = new StringEntity("grant_type=password&username=" + username + "&password=" + password + securityToken);
+            httpPost.setEntity(params);
 
-                try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                    int statusCode = response.getStatusLine().getStatusCode();
-                    if (statusCode == HttpStatus.SC_OK) {
-                        String responseBody = EntityUtils.toString(response.getEntity());
-                        // Controleer of de reactie de verwachte structuur heeft
-                        JSONObject jsonResponse = new JSONObject(responseBody);
-                        if (jsonResponse.has("access_token")) {
-                            return jsonResponse.getString("access_token");
-                        } else {
-                            System.err.println("Fout bij verkrijgen van toegangstoken. JSON-reactie van Salesforce bevat geen toegangstoken.");
-                        }
-                    } else {
-                        System.err.println("Fout bij authenticatie. Ongeldige statuscode ontvangen: " + statusCode);
-                    }
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    String responseBody = EntityUtils.toString(response.getEntity());
+                    return responseBody.split("\"access_token\":\"")[1].split("\"")[0];
+                } else {
+                    System.out.println("Failed to authenticate. Invalid status code received: " + response.getStatusLine().getStatusCode());
+                    return null;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.err.println("Fout bij authenticatie. Kan toegangstoken niet verkrijgen.");
             }
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
+    }
 
-        private static void createDeelnemer(String tokenUrl, String accessToken) {
-            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                HttpPost httpPost = new HttpPost(tokenUrl);
-                httpPost.setHeader("Authorization", "Bearer " + accessToken);
-                httpPost.setHeader("Content-Type", "application/json");
-
-                // Gegevens van deelnemer
-                Map<String, Object> deelnemerFields = new HashMap<>();
-                deelnemerFields.put("Name", "Mike Tyson");
-                deelnemerFields.put("Leeftijd__c", 25);
-                deelnemerFields.put("Nummertelefoon__c", "0485009987");
-                deelnemerFields.put("Email__c", "miketyson@gmail.com");
-                deelnemerFields.put("Bedrijf__c", "erasmus");
-
-                StringEntity params = new StringEntity(new JSONObject(deelnemerFields).toString());
-                httpPost.setEntity(params);
-
-                try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                    int statusCode = response.getStatusLine().getStatusCode();
-                    if (statusCode == 200) {
-                        System.out.println("Deelnemer succesvol toegevoegd aan Salesforce.");
-                    } else {
-                        System.out.println("Fout bij toevoegen deelnemer aan Salesforce. Status code: " + statusCode);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Fout bij toevoegen deelnemer aan Salesforce.");
+    private static String callSalesforceAPI(String url, String accessToken) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(url);
+            httpPost.setHeader("Authorization", "Bearer " + accessToken);
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                return EntityUtils.toString(response.getEntity());
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static void createDeelnemer(String tokenUrl, String accessToken) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(tokenUrl);
+            httpPost.setHeader("Authorization", "Bearer " + accessToken);
+            httpPost.setHeader("Content-Type", "application/json");
+
+            // Gegevens van deelnemer
+            Map<String, Object> deelnemerFields = new HashMap<>();
+            deelnemerFields.put("Name", "Mike Tyson");
+            deelnemerFields.put("Leeftijd__c", 25);
+            deelnemerFields.put("Nummertelefoon__c", "0485009987");
+            deelnemerFields.put("Email__c", "miketyson@gmail.com");
+            deelnemerFields.put("Bedrijf__c", "erasmus");
+
+            StringEntity params = new StringEntity(new JSONObject(deelnemerFields).toString());
+            httpPost.setEntity(params);
+
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode == 200) {
+                    System.out.println("Deelnemer succesvol toegevoegd aan Salesforce.");
+                } else {
+                    System.out.println("Fout bij toevoegen deelnemer aan Salesforce. Status code: " + statusCode);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Fout bij toevoegen deelnemer aan Salesforce.");
         }
     }
 }
