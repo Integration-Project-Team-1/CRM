@@ -26,6 +26,7 @@ public class Consumer {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(host);
 
+
         try {
             Connection connection = factory.newConnection();
             channel = connection.createChannel();
@@ -65,7 +66,7 @@ public class Consumer {
 
 
 
-        public static void connectToSalesforceAndSendData() {
+        public static void connectToSalesforce() {
             String SALESFORCE_USERNAME = "ehberasmus@gmail.com";
             String SALESFORCE_PASSWORD = "Event5431";
             String SALESFORCE_SECURITY_TOKEN = "S4lOdXADEdHNLYorrabi2mLg";
@@ -85,36 +86,46 @@ public class Consumer {
                     .setLoginEndpoint(LOGIN_URL);
 
             ForceApi api = new ForceApi(config);
+//            createDeelnemer(api);
+//            createBusiness(api);
+//            createConsumption(api);
 
-            // Maak de gegevens voor de aan te maken Deelnemer
-            Map<String, Object> deelnemerFields = new HashMap<>();
-            deelnemerFields.put("Name", "marcelo");
-            deelnemerFields.put("Leeftijd__c", 32);
-            deelnemerFields.put("Phone__c", "0485009999");
-            deelnemerFields.put("Email__c", "marcelo@gmail.com");
-            deelnemerFields.put("Bedrijf__c", "real madrid");
-
-            // Maak de Deelnemer aan in Salesforce
-            api.createSObject("Deelnemer__c", deelnemerFields);
-            Map<String, Object> businessFields = new HashMap<>();
-            businessFields.put("Name", "Voorbeeldbedrijf");
-            businessFields.put("VAT__c", "123456789");
-            businessFields.put("Email__c", "voorbeeld@bedrijf.com");
-            businessFields.put("Access_Code__c", 1234);
-            businessFields.put("Address__c", "Voorbeeldstraat 123");
-
-// Maak het Business object aan in Salesforce
-            api.createSObject("Business__c", businessFields);
-
-// Voor het aanmaken van het Consumption object
-            Map<String, Object> consumptionFields = new HashMap<>();
-            consumptionFields.put("Timestamp__c", new Date());
-            consumptionFields.put("Products__c", "Voorbeeldproducten");
-            consumptionFields.put("Consumer__c", "123e4567-e89b-12d3-a456-426614174000"); // Voorbeeld UUID
-
-// Maak het Consumption object aan in Salesforce
-            api.createSObject("Consumption__c", consumptionFields);
         }
+
+    public static void createDeelnemer(ForceApi api) {
+        Map<String, Object> deelnemerFields = new HashMap<>();
+        deelnemerFields.put("Name", "marcelo");
+        deelnemerFields.put("Leeftijd__c", 32);
+        deelnemerFields.put("Phone__c", "0485009999");
+        deelnemerFields.put("Email__c", "marcelo@gmail.com");
+        deelnemerFields.put("Bedrijf__c", "real madrid");
+
+        // Maak de Deelnemer aan in Salesforce
+        api.createSObject("Deelnemer__c", deelnemerFields);
+    }
+
+    public static void createBusiness(ForceApi api) {
+        Map<String, Object> businessFields = new HashMap<>();
+        businessFields.put("Name", "business soso");
+        businessFields.put("VAT__c", "123456999");
+        businessFields.put("Email__c", "soso@bedrijf.com");
+        businessFields.put("Access_Code__c", 2455);
+        businessFields.put("Address__c", "sosostraat 128");
+
+        // Maak het Business object aan in Salesforce
+        api.createSObject("Business__c", businessFields);
+    }
+
+    public static void createConsumption(ForceApi api) {
+        Map<String, Object> consumptionFields = new HashMap<>();
+        consumptionFields.put("Timestamp__c", new Date());
+        consumptionFields.put("Name", "food");
+        consumptionFields.put("Products__c", "hotdog");
+        consumptionFields.put("Consumer__c", "het is lekker "); // Voorbeeld UUID
+
+        // Maak het Consumption object aan in Salesforce
+        api.createSObject("Consumption__c", consumptionFields);
+    }
 
 }
 

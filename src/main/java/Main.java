@@ -22,7 +22,7 @@ public class Main {
         }, 0, 5, TimeUnit.SECONDS);
 
 
-        Consumer.connectToSalesforceAndSendData();
+        Consumer.connectToSalesforce();
 
 
 
