@@ -1,27 +1,14 @@
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.Base64;
 
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import java.util.Base64;
 import com.force.api.ApiConfig;
 import com.force.api.ForceApi;
 import com.rabbitmq.client.*;
-import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.io.IOException;
+import static com.fasterxml.jackson.databind.type.LogicalType.DateTime;
 
 
 public class Consumer {
@@ -75,95 +62,60 @@ public class Consumer {
     }
 
 
-    public static void authenticateAndCallSalesforce() {
-        String loginUrl = "https://login.salesforce.com/services/oauth2/token";
-        String clientId = "3MVG9PwZx9R6_Urc1GPWYVjQmwHmXKY1pQ8t_W_Ql4VXOFeo_9tKJW3O8nLf0JJoMjrOuii6wZ8XdpCcJfOOA";
-        String clientSecret = "BA7D5B9E3434948E1751C3C5B51BC366B8FD9165E3DCBD95A62AEF4D06B5C4C9";
-        String username = "ehberasmus@gmail.com";
-        String password = "Event5431";
-        String securityToken = "H1ODJnJb4guxN7Lwq5vIWdpWH";
-        String tokenUrl = "https://ehb-dev-ed.develop.my.salesforce.com/services/apexrest/Account/";
 
-        // Step 1: Authenticate and obtain access token
-        String accessToken = authenticate(loginUrl, clientId, clientSecret, username, password, securityToken);
 
-        // Step 2: Make RESTful API call to Salesforce
-        if (accessToken != null) {
-            String response = callSalesforceAPI(tokenUrl, accessToken);
-            System.out.println("Response from Salesforce API: " + response);
-        } else {
-            System.out.println("Failed to obtain access token. Authentication failed.");
-        }
-    }
 
-    private static String authenticate(String loginUrl, String clientId, String clientSecret, String username, String password, String securityToken) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(loginUrl);
-            httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
-            String credentials = clientId + ":" + clientSecret;
-            String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
-            httpPost.setHeader("Authorization", "Basic " + encodedCredentials);
-            StringEntity params = new StringEntity("grant_type=password&username=" + username + "&password=" + password + securityToken);
-            httpPost.setEntity(params);
+        public static void connectToSalesforceAndSendData() {
+            String SALESFORCE_USERNAME = "ehberasmus@gmail.com";
+            String SALESFORCE_PASSWORD = "Event5431";
+            String SALESFORCE_SECURITY_TOKEN = "S4lOdXADEdHNLYorrabi2mLg";
+            String LOGIN_URL = "https://ehb-dev-ed.develop.my.salesforce.com";
+            String CONSUMER_KEY = "3MVG9PwZx9R6_Urc1GPWYVjQmwHmXKY1pQ8t_W_Ql4VXOFeo_9tKJW3O8nLf0JJoMjrOuii6wZ8XdpCcJfOOA";
+            String CONSUMER_SECRET = "BA7D5B9E3434948E1751C3C5B51BC366B8FD9165E3DCBD95A62AEF4D06B5C4C9";
 
-            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                if (response.getStatusLine().getStatusCode() == 200) {
-                    String responseBody = EntityUtils.toString(response.getEntity());
-                    return responseBody.split("\"access_token\":\"")[1].split("\"")[0];
-                } else {
-                    System.out.println("Failed to authenticate. Invalid status code received: " + response.getStatusLine().getStatusCode());
-                    return null;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+            // Combineer wachtwoord en beveiligingstoken
+            String loginPassword = SALESFORCE_PASSWORD + SALESFORCE_SECURITY_TOKEN;
 
-    private static String callSalesforceAPI(String url, String accessToken) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(url);
-            httpPost.setHeader("Authorization", "Bearer " + accessToken);
-            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                return EntityUtils.toString(response.getEntity());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+            // Configureer de API-configuratie
+            ApiConfig config = new ApiConfig()
+                    .setClientId(CONSUMER_KEY)
+                    .setClientSecret(CONSUMER_SECRET)
+                    .setUsername(SALESFORCE_USERNAME)
+                    .setPassword(loginPassword)
+                    .setLoginEndpoint(LOGIN_URL);
 
-    private static void createDeelnemer(String tokenUrl, String accessToken) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(tokenUrl);
-            httpPost.setHeader("Authorization", "Bearer " + accessToken);
-            httpPost.setHeader("Content-Type", "application/json");
+            ForceApi api = new ForceApi(config);
 
-            // Gegevens van deelnemer
+            // Maak de gegevens voor de aan te maken Deelnemer
             Map<String, Object> deelnemerFields = new HashMap<>();
-            deelnemerFields.put("Name", "Mike Tyson");
-            deelnemerFields.put("Leeftijd__c", 25);
-            deelnemerFields.put("Nummertelefoon__c", "0485009987");
-            deelnemerFields.put("Email__c", "miketyson@gmail.com");
-            deelnemerFields.put("Bedrijf__c", "erasmus");
+            deelnemerFields.put("Name", "marcelo");
+            deelnemerFields.put("Leeftijd__c", 32);
+            deelnemerFields.put("Phone__c", "0485009999");
+            deelnemerFields.put("Email__c", "marcelo@gmail.com");
+            deelnemerFields.put("Bedrijf__c", "real madrid");
 
-            StringEntity params = new StringEntity(new JSONObject(deelnemerFields).toString());
-            httpPost.setEntity(params);
+            // Maak de Deelnemer aan in Salesforce
+            api.createSObject("Deelnemer__c", deelnemerFields);
+            Map<String, Object> businessFields = new HashMap<>();
+            businessFields.put("Name", "Voorbeeldbedrijf");
+            businessFields.put("VAT__c", "123456789");
+            businessFields.put("Email__c", "voorbeeld@bedrijf.com");
+            businessFields.put("Access_Code__c", 1234);
+            businessFields.put("Address__c", "Voorbeeldstraat 123");
 
-            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                int statusCode = response.getStatusLine().getStatusCode();
-                if (statusCode == 200) {
-                    System.out.println("Deelnemer succesvol toegevoegd aan Salesforce.");
-                } else {
-                    System.out.println("Fout bij toevoegen deelnemer aan Salesforce. Status code: " + statusCode);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Fout bij toevoegen deelnemer aan Salesforce.");
+// Maak het Business object aan in Salesforce
+            api.createSObject("Business__c", businessFields);
+
+// Voor het aanmaken van het Consumption object
+            Map<String, Object> consumptionFields = new HashMap<>();
+            consumptionFields.put("Timestamp__c", new Date());
+            consumptionFields.put("Products__c", "Voorbeeldproducten");
+            consumptionFields.put("Consumer__c", "123e4567-e89b-12d3-a456-426614174000"); // Voorbeeld UUID
+
+// Maak het Consumption object aan in Salesforce
+            api.createSObject("Consumption__c", consumptionFields);
         }
-    }
+
 }
 
 
