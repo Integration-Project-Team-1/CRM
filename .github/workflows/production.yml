@@ -1,4 +1,4 @@
-name:  Production
+name: Production
 
 on: push
 
@@ -45,13 +45,14 @@ jobs:
 
     steps:
 
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Check Docker Compose Syntax
-        run: docker compose config
+        run: docker compose -f CRM/docker-compose.yml config
 
       - name: Deploy
         run: |
-          cd /opt/integration_project/CRM
+          cd CRM
           docker compose down --volumes
           docker compose up crm-app -d --build
