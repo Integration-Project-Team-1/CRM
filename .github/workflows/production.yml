@@ -49,9 +49,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check Docker Compose Syntax
-        run: docker --version
+        run: docker compose config
 
       - name: Deploy
         run: |
-          docker-compose down --volumes
-          docker-compose up crm-app -d --build
+          docker-compose -f CRM/docker-compose.yml down --volumes
+          docker-compose -f CRM/docker-compose.yml up -d --build crm-java-app
