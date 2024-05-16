@@ -54,3 +54,5 @@ jobs:
         run: |
           docker compose down --volumes
           docker compose up -d
+      - name: Build with Maven (Skipping Tests)
+        run: mvn clean package -DskipTests
