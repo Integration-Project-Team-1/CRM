@@ -53,5 +53,6 @@ jobs:
 
       - name: Deploy
         run: |
+          cd CRM
           docker compose down --volumes
           docker compose up crm-app -d --build
