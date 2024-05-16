@@ -53,5 +53,5 @@ jobs:
 
       - name: Deploy
         run: |
-          docker-compose -f CRM/docker-compose.yml down --volumes
-          docker-compose -f CRM/docker-compose.yml up -d --build crm-java-app
+          docker compose down --volumes
+          docker compose up crm-app -d --build
