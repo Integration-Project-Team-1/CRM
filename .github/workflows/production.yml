@@ -52,6 +52,5 @@ jobs:
 
       - name: Deploy
         run: |
-          cd CRM
-          docker compose -f /opt/integration_project/CRM/docker-compose.yml down --volumes
-          docker compose -f /opt/integration_project/CRM/docker-compose.yml up crm-app -d --build
+          docker compose down --volumes
+          docker compose up -d
