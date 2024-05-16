@@ -2,10 +2,8 @@ name:  Production
 
 on: push
 
-
 jobs:
   build:
-
     runs-on: production
 
     steps:
@@ -23,7 +21,6 @@ jobs:
           pwd
 
   deploy:
-
     name: Deploy
     runs-on: production
 
