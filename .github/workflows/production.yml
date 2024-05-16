@@ -5,6 +5,7 @@ on: push
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     runs-on: production
 
     steps:
@@ -22,6 +23,7 @@ jobs:
           pwd
 
   deploy:
+    if: github.event.pull_request.merged == true
     name: Deploy
     runs-on: production
 
