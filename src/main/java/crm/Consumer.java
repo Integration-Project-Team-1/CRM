@@ -38,6 +38,18 @@ public class Consumer {
 
     private Channel channel;
 
+
+    // Nieuwe methode om een ConnectionFactory te retourneren
+    public ConnectionFactory getConnectionFactory() {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(HOST);
+        factory.setUsername(RABBITMQ_USERNAME);
+        factory.setPassword(RABBITMQ_PASSWORD);
+        factory.setPort(RABBITMQ_PORT);
+        return factory;
+    }
+
+
     //we create a connection within the constructor
     public Consumer() throws IOException {
 
@@ -177,8 +189,7 @@ public class Consumer {
 
 
 
-
-    }
+}
 
 
 
