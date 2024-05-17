@@ -8,12 +8,12 @@ public class xmlValidationTest {
     @Test
     public void testValidXML() {
         String validXML = "<root><child>Test</child></root>";
-        assertTrue(xmlValidation.validateXML(validXML));
+        assertTrue(xmlValidation.validateXML(validXML)); // deze moet werken omdat het wel overeenkomt met XSD
     }
 
     @Test
     public void testInvalidXML() {
-        String invalidXML = "<root><child>Test</child>"; // Dit XML-fragment is onvolledig en zal niet overeenkomen met het XSD-schema.
-        assertFalse(xmlValidation.validateXML(invalidXML));
+        String invalidXML = "<root><child>Test</child>";
+        assertFalse(xmlValidation.validateXML(invalidXML)); // deze moet false zijn om te werken omdat het niet overeenkomt met het XSD
     }
 }
