@@ -1,14 +1,17 @@
-package crm;
 
 
+import crm.Consumer;
+import crm.Participant;
+import crm.Business;
+import crm.Consumption;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Envelope;
+
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+
 import org.mockito.Mockito;
 import org.xml.sax.SAXException;
 
@@ -81,7 +84,7 @@ class ConsumerTest {
     }
 
     @Test
-    void testValidateXML() throws IOException, SAXException {
+    void testValidateXML() throws IOException,SAXException  {
         String xml = "<participant><method>create</method><uuid>12345</uuid></participant>";
         String xsdPath = "src/test/resources/participant.xsd"; // Ensure you have this file for the test
 
