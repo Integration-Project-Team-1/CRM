@@ -47,4 +47,4 @@ Als je problemen ondervindt tijdens de integratie, overweeg dan de volgende stap
 ## Bijdragers
 - Bouzourti Ismael - Projectleider / Ontwikkelaar
 - Hamoumi Soufiane - Salesforce Specialist / Ontwikkelaar
-- Amghar Hamza - Ontwikkelaar / Tester
+- Amghar Hamza - Ontwikkelaar / Tester / Salesforce Specialist 
