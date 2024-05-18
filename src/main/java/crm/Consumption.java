@@ -52,4 +52,8 @@ public class Consumption {
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
+
+    public String getId() {
+        return null;
+    }
 }

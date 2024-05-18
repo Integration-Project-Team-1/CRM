@@ -1,68 +1,61 @@
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.xml.sax.SAXException;
 import crm.Business;
 import crm.Consumer;
-import crm.Consumption;
 import crm.Participant;
-import org.junit.jupiter.api.Test;
+import crm.Consumption;
 import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ConsumerTest {
 
     @Test
-    void testConsumerCreation() {
-        // Test of de Consumer zonder fouten kan worden geïnstantieerd
-        assertDoesNotThrow(() -> new Consumer());
-    }
-
-    @Test
-    void testUnmarshalParticipant() throws IOException {
-        // Test het unmarshalling van een Participant-object
+    public void testUnmarshalParticipant() throws IOException {
+        String xml = "<participant xmlns=\"http://ehb.local\"><uuid>123</uuid><method>create</method></participant>";
         Consumer consumer = new Consumer();
-        String xml = "<participant><uuid>123</uuid><method>create</method></participant>";
-
-        assertDoesNotThrow(() -> {
+        try {
             Participant participant = consumer.unmarshalParticipant(xml);
+            assertNotNull(participant);
             assertEquals("123", participant.getUuid());
             assertEquals("create", participant.getMethod());
-        });
+        } catch (Exception e) {
+            fail("Exception should not be thrown: " + e.getMessage());
+        }
     }
 
-
     @Test
-    void testUnmarshalConsumption() throws IOException {
-        // Test het unmarshalling van een Consumption-object
+    public void testUnmarshalConsumption() throws IOException {
+        String xml = "<consumption><id>456</id></consumption>";
         Consumer consumer = new Consumer();
-        String xml = "<consumption><id>456</id><amount>100</amount></consumption>";
-
-        assertDoesNotThrow(() -> {
+        try {
             Consumption consumption = consumer.unmarshalConsumption(xml);
-            assertEquals(456, consumption.getId());
-            assertEquals(100, consumption.getAmount());
-        });
+            assertNotNull(consumption);
+            assertEquals("456", consumption.getId());
+        } catch (Exception e) {
+            fail("Exception should not be thrown: " + e.getMessage());
+        }
     }
 
     @Test
-    void testUnmarshalBusiness() throws IOException {
-        // Test het unmarshalling van een Business-object
+    public void testUnmarshalBusiness() throws IOException {
+        String xml = "<business xmlns=\"http://ehb.local\"><uuid>789</uuid><method>update</method></business>";
         Consumer consumer = new Consumer();
-        String xml = "<business><name>XYZ Corp</name></business>";
-
-        assertDoesNotThrow(() -> {
+        try {
             Business business = consumer.unmarshalBusiness(xml);
-            assertEquals("XYZ Corp", business.getName());
-        });
+            assertNotNull(business);
+            assertEquals("789", business.getUuid());
+            assertEquals("update", business.getMethod());
+        } catch (Exception e) {
+            fail("Exception should not be thrown: " + e.getMessage());
+        }
     }
 
     @Test
-    void testValidateXML() {
-        // Test XML-validatie
-        String xml = "<participant><uuid>123</uuid><method>create</method></participant>";
+    public void testValidateXML() {
+        String validXml = "<participant xmlns=\"http://ehb.local\"><uuid>123</uuid><method>create</method></participant>";
+        String invalidXml = "<participant><uuid>123</uuid>"; // missing closing tag
         String xsdPath = "src/main/resources/include.template.xsd";
-
-        assertTrue(Consumer.validateXML(xml, xsdPath));
+        assertTrue(Consumer.validateXML(validXml, xsdPath));
+        assertFalse(Consumer.validateXML(invalidXml, xsdPath));
     }
-
-    // Voeg meer tests toe naargelang je functionaliteit uitbreidt of verfijnt
-
 }

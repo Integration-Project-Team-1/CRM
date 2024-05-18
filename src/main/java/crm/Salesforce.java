@@ -315,7 +315,7 @@ public class Salesforce {
 
 
     // Method to update a Business__c object
-    public void updateBusiness(Business business) {
+    public void updateBusiness(String uuid, Business business) {
         ForceApi api = connectToSalesforce();
 
         // Retrieve the Business__c record by UUID
