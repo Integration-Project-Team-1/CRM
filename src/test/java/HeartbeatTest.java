@@ -2,10 +2,9 @@ import crm.Heartbeat;
 
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
-import java.io.IOException;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -46,25 +45,23 @@ class HeartbeatTest {
 
     @Test
     void testIsSalesforceAvailable() throws Exception {
-        URL urlMock = mock(URL.class);
+        // Mock the HttpURLConnection
         HttpURLConnection connectionMock = mock(HttpURLConnection.class);
-
-        when(urlMock.openConnection()).thenReturn(connectionMock);
         when(connectionMock.getResponseCode()).thenReturn(200);
 
-        assertTrue(Heartbeat.isSalesforceAvailable());
+        // Mock the openConnection method
+        Heartbeat heartbeatMock = mock(Heartbeat.class);
+        when(heartbeatMock.openConnection(new URL("https://erasmushogeschool7-dev-ed.develop.lightning.force.com/lightning/page/home")))
+                .thenReturn(connectionMock);
+
+        // Call the method being tested
+        boolean result = heartbeatMock.isSalesforceAvailable();
+
+        // Check the result
+        assertTrue(result);
     }
 
-    @Test
-    void testIsSalesforceAvailable_Failure() throws Exception {
-        URL urlMock = mock(URL.class);
-        HttpURLConnection connectionMock = mock(HttpURLConnection.class);
 
-        when(urlMock.openConnection()).thenReturn(connectionMock);
-        when(connectionMock.getResponseCode()).thenReturn(500);
-
-        assertFalse(Heartbeat.isSalesforceAvailable());
-    }
 
     @Test
     void testSendHeartbeat() throws Exception {

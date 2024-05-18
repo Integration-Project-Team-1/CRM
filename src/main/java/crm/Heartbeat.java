@@ -39,6 +39,8 @@ public class Heartbeat {
     private final String RABBITMQ_PASSWORD = System.getenv("RABBITMQ_PASSWORD");
     private final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
 
+
+
     public Heartbeat() throws Exception {
         setService("crm");
 
@@ -168,6 +170,9 @@ public class Heartbeat {
         }
     }
 
+    public HttpURLConnection openConnection(URL url) throws IOException {
+        return (HttpURLConnection) url.openConnection();
+    }
 
     public static boolean isSalesforceAvailable() throws Exception {
 
