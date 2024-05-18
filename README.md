@@ -1,6 +1,6 @@
 # Salesforce CRM Integratie Project
 
-Welkom bij het repository voor ons integratieproject waarbij we Salesforce en RabbitMQ gebruiken voor het beheren van een school evenement! Dit project heeft tot doel om de functionaliteiten van Salesforce te integreren met RabbitMQ voor het efficiënt beheren van de inschrijvingen, communicatie en andere processen met betrekking tot het evenement.
+Welkom bij het repository voor ons integratieproject waarbij we Salesforce en RabbitMQ gebruiken voor het beheren van een evenement! Dit project heeft tot doel om de functionaliteiten van Salesforce te integreren met RabbitMQ voor het efficiënt beheren van de inschrijvingen, communicatie en andere processen met betrekking tot het evenement.
 
 ## Vereisten
 - Salesforce Developer Account
