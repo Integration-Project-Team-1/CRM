@@ -17,6 +17,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Checkout xmlxsd
+        uses: actions/checkout@v4
+        with:
+          repository: Integration-Project-Team-1/xmlxsd
+          ssh-key: ${{ secrets.RUNNER_PROD_SSH }}
+
       - name: "Debug: System Info"
         run: |
           whoami
