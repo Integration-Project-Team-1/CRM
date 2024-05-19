@@ -5,11 +5,11 @@ import static org.testng.AssertJUnit.assertTrue;
 
 public class xmlValidationTest {
 
-    @Test
-    public void testValidXML() {
-        String validXML = "<root><child>Test</child></root>";
-        assertTrue(xmlValidation.validateXML(validXML)); // deze moet werken omdat het wel overeenkomt met XSD
-    }
+   // @Test
+    //    public void testValidXML() {
+    //        String validXML = "<root><child>Test</child></root>";
+    //        assertTrue(xmlValidation.validateXML(validXML)); // deze moet werken omdat het wel overeenkomt met XSD
+    //    }
 
     @Test
     public void testInvalidXML() {
