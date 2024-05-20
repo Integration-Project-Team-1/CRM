@@ -3,7 +3,7 @@ name: Testing CI/CD Pipeline
 on:
   push:
     branches:
-      - testDev
+      - dev
 
 jobs:
   build:

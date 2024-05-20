@@ -72,9 +72,7 @@ public class Heartbeat {
 
     }
 
-    public void setTimestamp(int timestamp) {
-        this.timestamp = timestamp;
-    }
+
 
 
 
