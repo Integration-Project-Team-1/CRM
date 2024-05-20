@@ -30,7 +30,7 @@ public class Consumer {
     private final String ROUTINGKEY_USER = System.getenv("ROUTINGKEY_USER");
     private final String ROUTINGKEY_CONSUMPTION = System.getenv("ROUTINGKEY_CONSUMPTION");
     private final String ROUTINGKEY_BUSINESS = System.getenv("ROUTINGKEY_BUSINESS");
-    private final String HOST = "10.2.160.11";
+    private final String HOST = System.getenv("DEV_HOST");
     private final String RABBITMQ_USERNAME = System.getenv("RABBITMQ_USERNAME");
     private final String RABBITMQ_PASSWORD = System.getenv("RABBITMQ_PASSWORD");
     private final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
@@ -79,12 +79,6 @@ public class Consumer {
                 System.out.println(" [x] Received '" + message + "'");
                 String xsd = "src/main/resources/include.template.xsd";
 
-                //if(!validateXML(message, xsd)){
-                //  System.out.println("XML is not valid. Skipping processing.");
-                //   return; // stop further processing
-                //}
-
-                //System.out.println("validation succesful");
                 try {
 
                     if (message.contains("</participant>") && !message.contains("<service>crm</service>")) {
@@ -171,28 +165,8 @@ public class Consumer {
         return (Business) jaxbUnmarshaller.unmarshal(inputStream);
     }
 
-    //validate xml
 
-    public static boolean validateXML(String xml, String xsdPath) {
-
-        try{
-            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI); //instance of schemafactory for xml validation
-            Schema schema = factory.newSchema(new File(xsdPath)); //instance of schema by parsing the xsd file
-
-            Validator validator = schema.newValidator();
-            validator.validate(new StreamSource(new StringReader(xml))); //validating the xml against the xsd using streamsource object created from stringreader containing the xml
-        } catch (IOException | SAXException e) {
-            System.out.println("Exception" + e.getMessage());
-            return false;
-        }
-
-        return true;
-    }
-
-
-
-
-    }
+}
 
 
 

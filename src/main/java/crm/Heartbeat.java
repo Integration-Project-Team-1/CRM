@@ -22,6 +22,7 @@ import java.time.ZoneOffset;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
+import static crm.xmlValidation.validateXML;
 
 //annotation are part of jaxb
 @XmlRootElement(name = "heartbeat", namespace = "http://ehb.local")
@@ -126,13 +127,13 @@ public class Heartbeat {
                 "<error>" + this.getError() + "</error>" +
                 "</heartbeat>";
 
-        // if (!validateXML(realXml,xsd)){
+         if (!validateXML(realXml)){
 
-        //    System.out.println("XML validation failed. crm.Heartbeat not sent");
-        //      return null; // if validation fails the method stops and heartbeat is not sent
-        //   }
+            System.out.println("XML validation failed. crm.Heartbeat not sent");
+              return null; // if validation fails the method stops and heartbeat is not sent
+           }
 
-        //  System.out.println("validation succesful");
+          System.out.println("validation succesful");
 
         if (this.getError() == "1"){
 
@@ -143,7 +144,7 @@ public class Heartbeat {
         realXml = realXml.replaceAll("<heartbeat\\s+", "<heartbeat");
 
         // Print the XML
-        //System.out.println(realXml);
+        System.out.println(realXml);
 
 
         return realXml;
@@ -152,6 +153,9 @@ public class Heartbeat {
         this.timestamp = (int) (Instant.now().getEpochSecond());
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(HOST);
+        factory.setUsername(RABBITMQ_USERNAME);
+        factory.setPassword(RABBITMQ_PASSWORD);
+        factory.setPort(RABBITMQ_PORT);
 
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
@@ -161,7 +165,7 @@ public class Heartbeat {
                     "<status>" + this.getStatus() + "</status>" +
                     "<error>" + this.getError() + "</error>" +
                     "</heartbeat>";
-            channel.basicPublish("", "heartbeat_queue", null, message.getBytes("UTF-8"));
+            channel.basicPublish("", QUEUE_NAME_HEARTBEAT, null, message.getBytes("UTF-8"));
 
         }catch(IOException | TimeoutException e){
             System.out.println("heartbeat was not sent due to error");

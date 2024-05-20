@@ -39,7 +39,6 @@ public class SalesforceTest {
         when(participant.getBusiness()).thenReturn("ABC Company");
 
         when(participant.getUuid()).thenReturn("ca5378c7-c079-4d62-b4e1-de8cb4004eee");
-        when(participant.getFromBusiness()).thenReturn(String.valueOf(true));
 
         // Call method to be tested
         assertDoesNotThrow(() -> {
@@ -65,7 +64,6 @@ public class SalesforceTest {
         when(updatedParticipant.getBusiness()).thenReturn("ABC Company");
 
         when(updatedParticipant.getUuid()).thenReturn("ca5378c7-c079-4d62-b4e1-de8cb4004eee");
-        when(updatedParticipant.getFromBusiness()).thenReturn(String.valueOf(true));
 
         // Call method to be tested
         assertDoesNotThrow(() -> {
