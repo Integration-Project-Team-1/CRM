@@ -30,7 +30,7 @@ public class Consumer {
     private final String ROUTINGKEY_USER = System.getenv("ROUTINGKEY_USER");
     private final String ROUTINGKEY_CONSUMPTION = System.getenv("ROUTINGKEY_CONSUMPTION");
     private final String ROUTINGKEY_BUSINESS = System.getenv("ROUTINGKEY_BUSINESS");
-    private final String HOST = System.getenv("DEV_HOST");
+    private final String HOST = "10.2.160.11";
     private final String RABBITMQ_USERNAME = System.getenv("RABBITMQ_USERNAME");
     private final String RABBITMQ_PASSWORD = System.getenv("RABBITMQ_PASSWORD");
     private final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
@@ -53,7 +53,7 @@ public class Consumer {
 
             channel.queueDeclare(CONSUMING_QUEUE, false, false, false, null);
             channel.queueBind(CONSUMING_QUEUE, EXCHANGE, ROUTINGKEY_USER);
-            //channel.queueBind(CONSUMING_QUEUE, EXCHANGE, ROUTINGKEY_BUSINESS);
+            channel.queueBind(CONSUMING_QUEUE, EXCHANGE, ROUTINGKEY_BUSINESS);
             //channel.queueBind(CONSUMING_QUEUE, EXCHANGE, ROUTINGKEY_CONSUMPTION);
 
 
@@ -110,8 +110,21 @@ public class Consumer {
                         message.replace("<business xmlns=\"http://ehb.local\">","<business>");
                         Business business1 = (Business) unmarshalBusiness(message);
                         System.out.println(business1.toString());
-                        salesforce.createBusiness(business1);
-                        System.out.println("business created");
+                        System.out.println("business unmarshalled");
+                        if (Objects.equals(business1.getMethod(), "create")) {
+
+                            salesforce.createBusiness(business1);
+                            System.out.println("business created");
+                        }else if(Objects.equals(business1.getMethod(), "update")){
+                            salesforce.updateBusiness(business1.getUuid(),business1);
+                            System.out.println("business updated");
+                        }else if(Objects.equals(business1.getMethod(), "delete")){
+
+                            salesforce.deleteBusinessByUUID(business1.getUuid());
+                            System.out.println("business deleted");
+
+                        }
+
 
                     } else if (message.contains("<consumption>")) {
                         Consumption consumption1 = (Consumption) unmarshalConsumption(message);
@@ -151,6 +164,7 @@ public class Consumer {
 
     // Unmarshall crm.Business-object van XML-string
     public Business unmarshalBusiness(String xml) throws JAXBException {
+        System.out.println(xml);
         JAXBContext jaxbContext = JAXBContext.newInstance(Business.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
         ByteArrayInputStream inputStream = new ByteArrayInputStream(xml.getBytes());

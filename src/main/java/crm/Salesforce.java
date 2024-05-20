@@ -25,12 +25,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static crm.xmlValidation.validateXML;
+
 public class Salesforce {
 
-    private static List<String> createdDeelnemersList = new ArrayList<>();
-    private static List<String> deletedUsersList = new ArrayList<>();
-
-    private xmlValidation xmlValidation = new xmlValidation();
+    private static List<String> createdDeelnemersUuidList = new ArrayList<>();
+    private static List<JSONObject> updatedJsonDeelnemersList = new ArrayList<>();
+    private static List<String> deletedUsersUuidList = new ArrayList<>();
 
     private final String HOST = System.getenv("DEV_HOST");
     private final String RABBITMQ_USERNAME = System.getenv("RABBITMQ_USERNAME");
@@ -79,10 +80,20 @@ public class Salesforce {
         deelnemerFields.put("Bedrijf__c", participant.getBusiness());
         deelnemerFields.put("date_of_birth__c", participant.getDateOfBirth());
         deelnemerFields.put("Deelnemer_uuid__c", participant.getUuid());
-        deelnemerFields.put("from_business__c", participant.getFromBusiness());
 
-        // Maak de Deelnemer aan in Salesforce
-        api.createSObject("Deelnemer__c", deelnemerFields);
+        try{
+
+            createdDeelnemersUuidList.add(participant.getUuid());
+
+            // Maak de Deelnemer aan in Salesforce
+            api.createSObject("Deelnemer__c", deelnemerFields);
+
+        }catch (Exception e){
+            e.printStackTrace();
+            e.getMessage();
+        }
+
+
     }
 
     public void createBusiness(Business business) {
@@ -95,8 +106,15 @@ public class Salesforce {
         businessFields.put("Address__c", business.getAddress());
         businessFields.put("Bedrijf_uuid__c", business.getUuid());
 
-        // Maak het Business object aan in Salesforce
-        api.createSObject("Business__c", businessFields);
+        try {
+            // Maak het Business object aan in Salesforce
+            api.createSObject("Business__c", businessFields);
+        }catch (Exception e){
+            e.printStackTrace();
+            e.getMessage();
+        }
+
+
     }
 
     public void createConsumption(Consumption consumption) {
@@ -121,6 +139,8 @@ public class Salesforce {
             try {
                 // Convert JSON string to Map
                 ObjectMapper objectMapper = new ObjectMapper();
+
+                JSONObject deelnemerJsonObject = new JSONObject(deelnemerJson);
                 Map<String, Object> deelnemerRecord = objectMapper.readValue(deelnemerJson, new TypeReference<Map<String, Object>>() {
                 });
 
@@ -132,13 +152,17 @@ public class Salesforce {
                 updatedFields.put("Email__c", updatedParticipant.getEmail());
                 updatedFields.put("Bedrijf__c", updatedParticipant.getBusiness());
                 updatedFields.put("date_of_birth__c", updatedParticipant.getDateOfBirth());
-                updatedFields.put("from_business__c", updatedParticipant.getFromBusiness());
 
                 // Get the record ID
                 String id = (String) deelnemerRecord.get("Id");
 
+                String gewijzigdeUuid = deelnemerJsonObject.optString("Deelnemer_uuid__c");
+
+
                 // Update the Deelnemer in Salesforce using the retrieved ID and updated fields
                 api.updateSObject("Deelnemer__c", id, updatedFields);
+                deleteGewijzigdeDeelnemer(gewijzigdeUuid);
+
                 System.out.println("Participant updated");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -160,6 +184,8 @@ public class Salesforce {
                 Map<String, Object> deelnemerRecord = objectMapper.readValue(deelnemerJson, new TypeReference<Map<String, Object>>() {
                 });
                 String deelnemerId = (String) deelnemerRecord.get("Id");
+
+                deletedUsersUuidList.add(uuid);
                 // Delete the Deelnemer
                 api.deleteSObject("Deelnemer__c", deelnemerId);
                 System.out.println("Deelnemer deleted successfully.");
@@ -173,15 +199,20 @@ public class Salesforce {
         }
     }
 
-    public QueryResult<Map<String, Object>> retrieveDeelnemerByUUID(ForceApi api, String uuid) {
+    public QueryResult<Map<String, Object>> retrieveDeelnemerByUUID(String uuid) {
+
+        ForceApi api = connectToSalesforce();
         // Query the Deelnemer__c record by UUID
-        String query = "SELECT Name, familie_naam__c, Phone__c, Email__c, Bedrijf__c, date_of_birth__c, Deelnemer_uuid__c FROM Deelnemer__c WHERE Deelnemer_uuid__c = '" + uuid + "'";
+        String query = "SELECT Name, familie_naam__c, Phone__c, Email__c, Bedrijf__c, date_of_birth__c FROM gewijzigde_Deelnemer__c WHERE Deelnemer_uuid__c = '" + uuid + "'";
 
         // Perform the query
         QueryResult<Map> queryResult = api.query(query);
 
+        System.out.println("yes");
+
         // Cast the QueryResult to the appropriate generic type
         return (QueryResult<Map<String, Object>>) (QueryResult<?>) queryResult;
+
     }
 
     public String getDeelnemer(String uuid) {
@@ -200,12 +231,12 @@ public class Salesforce {
                 return jsonDeelnemer;
 
             } catch (Exception e) {
-                e.printStackTrace(); // Handle the exception appropriately
+                e.printStackTrace();
             }
         } else {
             System.out.println("No records found.");
         }
-        return null; // Or handle the case where no records are found
+        return null;
 
     }
 
@@ -228,13 +259,14 @@ public class Salesforce {
                     String jsonDeelnemer = objectMapper.writeValueAsString(deelnemer);
                     return jsonDeelnemer;
                 } catch (Exception e) {
-                    e.printStackTrace(); // Handle the exception appropriately
+                    e.printStackTrace();
+                    e.getMessage();
                 }
             } else {
                 System.out.println("Deelnemer UUID is null. Generating a new UUID...");
                 try {
                     // Create a new UUID by making a POST request to the provided URL
-                    URL url = new URL("http://10.2.160.10:55000/create");
+                    URL url = new URL("http://10.2.160.11:55000/create");
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod("POST");
                     connection.setRequestProperty("Content-Type", "application/json");
@@ -271,33 +303,37 @@ public class Salesforce {
                             String deelnemerId = deelnemer.get("Id").toString();
                             // Remove the Id field from the map
                             deelnemer.remove("Id");
+                            // Convert the updated map object to JSON string
+                            String jsonDeelnemer = objectMapper.writeValueAsString(deelnemer);
+                            JSONObject jsonDeelnemerObject = new JSONObject(jsonDeelnemer);
+                            updatedJsonDeelnemersList.add(jsonDeelnemerObject);
+
                             // Update the Salesforce object without the Id field
                             api.updateSObject(customObject, deelnemerId, deelnemer);
 
-                            // Convert the updated map object to JSON string
-                            String jsonDeelnemer = objectMapper.writeValueAsString(deelnemer);
+
                             return jsonDeelnemer;
                         }
                     } else {
-                        // Handle the case where the HTTP request fails
                         System.out.println("HTTP request failed with response code: " + responseCode);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                    e.getMessage();
                 }
             }
         } else {
             System.out.println("No records found.");
         }
-        return null; // Or handle the case where no records are found
+        return null;
     }
 
 
     public void showDeelnemer(String givenuuid) {
-        ForceApi api = connectToSalesforce(); // Assume you have a method to connect to Salesforce
+        ForceApi api = connectToSalesforce();
 
         String uuid = givenuuid;
-        QueryResult<Map<String, Object>> queryResult = retrieveDeelnemerByUUID(api, uuid);
+        QueryResult<Map<String, Object>> queryResult = retrieveDeelnemerByUUID(uuid);
 
         // Print the retrieved records
         System.out.println("Retrieved Deelnemer records:");
@@ -315,60 +351,96 @@ public class Salesforce {
 
 
     // Method to update a Business__c object
-    public void updateBusiness(Business business) {
+    public void updateBusiness(String uuid, Business updatedBusiness) {
         ForceApi api = connectToSalesforce();
+        // Retrieve the Business record JSON string based on UUID
+        String businessJson = getBusiness(uuid);
 
-        // Retrieve the Business__c record by UUID
-        QueryResult<Map> businessQueryResult = retrieveBusinessByUUID(api, business.getUuid());
+        if (businessJson != null) {
+            try {
+                // Convert JSON string to Map
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> businessRecord = objectMapper.readValue(businessJson, new TypeReference<Map<String, Object>>() {});
 
-        // Check if a Business with the provided UUID exists
-        if (businessQueryResult.getTotalSize() > 0) {
-            // Get the Business__c record ID
-            String businessUUID = (String) businessQueryResult.getRecords().get(0).get("Bedrijf_uuid__c");
+                // Prepare fields to update
+                Map<String, Object> updatedFields = new HashMap<>();
+                updatedFields.put("name", updatedBusiness.getName());
+                updatedFields.put("VAT__c", updatedBusiness.getVat());
+                updatedFields.put("email__c", updatedBusiness.getEmail());
+                updatedFields.put("access_code__c", updatedBusiness.getAccessCode());
+                updatedFields.put("address__c", updatedBusiness.getAddress());
 
-            // Prepare fields to update
-            Map<String, Object> businessFields = new HashMap<>();
-            businessFields.put("Name", business.getName());
-            businessFields.put("VAT__c", business.getVat());
-            businessFields.put("Email__c", business.getEmail());
-            businessFields.put("Access_Code__c", business.getAccessCode());
-            businessFields.put("Address__c", business.getAddress());
+                System.out.println(updatedFields.values());
+                // Get the record ID
+                String id = (String) businessRecord.get("Id");
 
-            // Update the Business__c object in Salesforce
-            api.updateSObject("Business__c", businessUUID, businessFields);
-            System.out.println("Business updated successfully.");
+                // Update the Business in Salesforce using the retrieved ID and updated fields
+                api.updateSObject("Business__c", id, updatedFields);
+                System.out.println("Business updated");
+            } catch (Exception e) {
+                e.printStackTrace();
+                e.getMessage();
+            }
         } else {
-            System.out.println("No Business found with UUID " + business.getUuid());
-
+            System.out.println("No Business record found with UUID: " + uuid);
         }
     }
+
 
     // Method to delete a Business__c object
     public void deleteBusinessByUUID(String uuid) {
 
         ForceApi api = connectToSalesforce();
         // Retrieve the Business__c record by UUID
-        QueryResult<Map> businessQueryResult = retrieveBusinessByUUID(api, uuid);
+        String businessJson = getBusiness(uuid);
 
         // Check if a Business with the provided UUID exists
-        if (businessQueryResult.getTotalSize() > 0) {
-            // Get the Business__c record ID
-            String businessUUID = (String) businessQueryResult.getRecords().get(0).get("Bedrijf_uuid__c");
+        if (businessJson != null) {
+            try {
+                // Convert JSON string to Map
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> businessRecord = objectMapper.readValue(businessJson, new TypeReference<Map<String, Object>>() {});
 
-            // Delete the Business__c object in Salesforce
-            api.deleteSObject("Business__c", businessUUID);
-            System.out.println("Business deleted successfully.");
+                // Get the Business__c record ID
+                String businessId = (String) businessRecord.get("Id");
+
+                // Delete the Business__c object in Salesforce
+                api.deleteSObject("Business__c", businessId);
+                System.out.println("Business deleted successfully.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                e.getMessage();
+            }
         } else {
             System.out.println("No Business found with UUID " + uuid);
         }
     }
 
-    public static QueryResult<Map> retrieveBusinessByUUID(ForceApi api, String uuid) {
-        // SOQL query to retrieve Business__c record by Bedrijf_uuid__c field
+    public String getBusiness(String uuid) {
+        ForceApi api = connectToSalesforce();
+        System.out.println("i am in getbusiness and api works");
+        // SOQL query to retrieve Business__c record by uuid field
         String query = "SELECT Id, Name, VAT__c, Email__c, Access_Code__c, Address__c FROM Business__c WHERE Bedrijf_uuid__c = '" + uuid + "'";
+        System.out.println("query executed");
 
-        // Perform the query
-        return api.query(query);
+        // Perform the query and get the first result
+        QueryResult<Map> queryResult = api.query(query);
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (queryResult.getTotalSize() > 0) {
+            Map<String, Object> business = queryResult.getRecords().get(0);
+            try {
+                // Convert the map object to JSON string
+                String jsonBusiness = objectMapper.writeValueAsString(business);
+                return jsonBusiness;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                e.getMessage();
+            }
+        } else {
+            System.out.println("No records found.");
+        }
+        return null;
     }
 
     public void continuouslyCheckForNewUsers(String customObject) {
@@ -382,6 +454,11 @@ public class Salesforce {
 
             // Check if jsonDeelnemer is null, if so, continue the loop
             if (jsonDeelnemer == null) {
+                try {
+                    TimeUnit.SECONDS.sleep(15);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 continue; // Skip the rest of the loop and start from the beginning
             }
 
@@ -393,21 +470,21 @@ public class Salesforce {
             String uuid = extractUUID(message);
 
                 // Check if the message is not already in the list
-                if (!createdDeelnemersList.contains(uuid)) {
+                if (!createdDeelnemersUuidList.contains(uuid)) {
                     // Send the message to the exchange
                     sendToExchange(message);
                     // Add the message to the list
-                    createdDeelnemersList.add(uuid);
+                    createdDeelnemersUuidList.add(uuid);
                 }
 
 
             // Check if the list size exceeds the maximum allowed size (5)
-            if (createdDeelnemersList.size() > 5) {
+            if (createdDeelnemersUuidList.size() > 5) {
                 // Remove the oldest message from the list
-                createdDeelnemersList.remove(0);
+                createdDeelnemersUuidList.remove(0);
             }
 
-            // Wait for 30 seconds before checking again
+            // Wait for 15 seconds before checking again
             try {
                 TimeUnit.SECONDS.sleep(15);
             } catch (InterruptedException e) {
@@ -423,42 +500,60 @@ public class Salesforce {
             // Get the JSON representation of the current Deelnemer__c record
             String jsonDeelnemer = getNewestDeelnemerAsJson(customObject);
 
+
             System.out.println(jsonDeelnemer);
 
             // Check if jsonDeelnemer is null, if so, continue the loop
             if (jsonDeelnemer == null) {
+                // Wait for 15 seconds before checking again
+                try {
+                    TimeUnit.SECONDS.sleep(15);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 continue; // Skip the rest of the loop and start from the beginning
             }
 
             try {
-                JSONObject oldJson = new JSONObject(oldJsonDeelnemer);
                 JSONObject newJson = new JSONObject(jsonDeelnemer);
+                boolean isDuplicate = false;
 
-                String oldName = oldJson.optString("Name");
-                String newName = newJson.optString("Name");
+                // Compare newJson with each existing JSON object in the list
+                for (JSONObject oldJson : updatedJsonDeelnemersList ) {
+                    String oldName = oldJson.optString("Name");
+                    String newName = newJson.optString("Name");
 
-                String oldFamilieNaam = oldJson.optString("familie_naam__c");
-                String newFamilieNaam = newJson.optString("familie_naam__c");
+                    String oldFamilieNaam = oldJson.optString("familie_naam__c");
+                    String newFamilieNaam = newJson.optString("familie_naam__c");
 
-                String oldPhone = oldJson.optString("Phone__c");
-                String newPhone = newJson.optString("Phone__c");
+                    String oldPhone = oldJson.optString("Phone__c");
+                    String newPhone = newJson.optString("Phone__c");
 
-                String oldEmail = oldJson.optString("Email__c");
-                String newEmail = newJson.optString("Email__c");
+                    String oldEmail = oldJson.optString("Email__c");
+                    String newEmail = newJson.optString("Email__c");
 
-                String oldBedrijf = oldJson.optString("Bedrijf__c");
-                String newBedrijf = newJson.optString("Bedrijf__c");
+                    String oldBedrijf = oldJson.optString("Bedrijf__c");
+                    String newBedrijf = newJson.optString("Bedrijf__c");
 
-                String oldDateOfBirth = oldJson.optString("date_of_birth__c");
-                String newDateOfBirth = newJson.optString("date_of_birth__c");
+                    String oldDateOfBirth = oldJson.optString("date_of_birth__c");
+                    String newDateOfBirth = newJson.optString("date_of_birth__c");
 
-                if (!oldName.equals(newName) ||
-                        !oldFamilieNaam.equals(newFamilieNaam) ||
-                        !oldPhone.equals(newPhone) ||
-                        !oldEmail.equals(newEmail) ||
-                        !oldBedrijf.equals(newBedrijf) ||
-                        !oldDateOfBirth.equals(newDateOfBirth)) {
+                    if (oldName.equals(newName) &&
+                            oldFamilieNaam.equals(newFamilieNaam) &&
+                            oldPhone.equals(newPhone) &&
+                            oldEmail.equals(newEmail) &&
+                            oldBedrijf.equals(newBedrijf) &&
+                            oldDateOfBirth.equals(newDateOfBirth)) {
+                        isDuplicate = false;
 
+                        System.out.println(oldName);
+                        System.out.println(newName);
+                    }
+                }
+
+
+                if (!isDuplicate) {
                     System.out.println("Changes detected in " + customObject + " record:");
 
                     // Print the JSON representation of the new Deelnemer__c record
@@ -466,20 +561,25 @@ public class Salesforce {
                     System.out.println(jsonDeelnemer);
                     String message = jsonToXml(jsonDeelnemer, method);
 
+                    // Add the new JSON to the list of existing JSON objects
+                    updatedJsonDeelnemersList.add(newJson);
+
                     // Send the message to the exchange
                     sendToExchange(message);
+                    String uuid = newJson.optString("Deelnemer_uuid__c");
+                    deleteGewijzigdeDeelnemer(uuid);
+                    updatedJsonDeelnemersList.remove(0);
 
-                }else System.out.println("No changes detected in " + customObject + " record.");
+                } else {
+                    System.out.println("No changes detected in " + customObject + " record.");
+                }
 
-            }catch (JSONException e){
+            } catch (JSONException e) {
                 e.printStackTrace();
-                e.getMessage();
             }
 
-            // Set oldJsonDeelnemer for the next iteration
-            oldJsonDeelnemer = jsonDeelnemer;
 
-            // Wait for 30 seconds before checking again
+            // Wait for 15 seconds before checking again
             try {
                 TimeUnit.SECONDS.sleep(15);
             } catch (InterruptedException e) {
@@ -501,6 +601,11 @@ public class Salesforce {
 
             // Check if jsonDeelnemer is null, if so, continue the loop
             if (jsonDeelnemer == null) {
+                try {
+                    TimeUnit.SECONDS.sleep(15);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 continue; // Skip the rest of the loop and start from the beginning
             }
 
@@ -512,21 +617,21 @@ public class Salesforce {
 
 
                 // Check if the message is not already in the list
-                if (!deletedUsersList.contains(uuid)) {
+                if (!deletedUsersUuidList.contains(uuid)) {
                     // Send the message to the exchange
                     sendToExchange(message);
                     // Add the message to the list
-                    deletedUsersList.add(uuid);
+                    deletedUsersUuidList.add(uuid);
                 }
 
 
             // Check if the list size exceeds the maximum allowed size (5)
-            if (deletedUsersList.size() > 5) {
+            if (deletedUsersUuidList.size() > 5) {
                 // Remove the oldest message from the list
-                deletedUsersList.remove(0);
+                deletedUsersUuidList.remove(0);
             }
 
-            // Wait for 30 seconds before checking again
+            // Wait for 15 seconds before checking again
             try {
                 TimeUnit.SECONDS.sleep(15);
             } catch (InterruptedException e) {
@@ -540,8 +645,7 @@ public class Salesforce {
             JSONObject jsonObject = new JSONObject(jsonString);
 
             String xmlData = String.format(
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>%n" +
-                            "<participant xmlns=\"http://ehb.local\" fromBusiness=\"%s\" uuid=\"%s\">%n" +
+                            "<participant xmlns=\"http://ehb.local\" uuid=\"%s\">%n" +
                             "    <service>crm</service>%n" +
                             "    <method>%s</method>%n" +
                             "    <firstname>%s</firstname>%n" +
@@ -551,7 +655,6 @@ public class Salesforce {
                             "    <business>%s</business>%n" +
                             "    <date_of_birth>%s</date_of_birth>%n" +
                             "</participant>%n",
-                    jsonObject.has("Bedrijf__c") && !jsonObject.optString("Bedrijf__c", "").isEmpty() ? "true" : "false",
                     jsonObject.optString("Deelnemer_uuid__c", ""),
                     method,
                     jsonObject.optString("Name", ""),
@@ -577,6 +680,13 @@ public class Salesforce {
         factory.setUsername(RABBITMQ_USERNAME);
         factory.setPassword(RABBITMQ_PASSWORD);
         factory.setPort(RABBITMQ_PORT);// Set the RabbitMQ server host
+
+        if (!validateXML(message)){
+
+            System.out.println("XML validation failed. participant not sent");
+            return; // if validation fails the method stops and participant is not sent
+        }
+
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
             // Declare the topic exchange
@@ -609,7 +719,6 @@ public class Salesforce {
                 updatedFields.put("Email__c", updatedParticipant.getEmail());
                 updatedFields.put("Bedrijf__c", updatedParticipant.getBusiness());
                 updatedFields.put("date_of_birth__c", updatedParticipant.getDateOfBirth());
-                updatedFields.put("from_business__c", updatedParticipant.getFromBusiness());
 
                 // Get the record ID
                 String id = (String) deelnemerRecord.get("Id");
@@ -658,6 +767,56 @@ public class Salesforce {
         } else {
             return null;
         }
+    }
+
+    public void deleteGewijzigdeDeelnemer(String uuid) {
+        ForceApi api = connectToSalesforce();
+        // Retrieve Deelnemer by UUID
+        String deelnemerJson = getGewijzigdeDeelnemer(uuid);
+        if (deelnemerJson != null) {
+            try {
+                // Convert JSON string to Map
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> deelnemerRecord = objectMapper.readValue(deelnemerJson, new TypeReference<Map<String, Object>>() {
+                });
+                String deelnemerId = (String) deelnemerRecord.get("Id");
+
+                // Delete the Deelnemer
+                api.deleteSObject("gewijzigde_Deelnemer__c", deelnemerId);
+                System.out.println("Deelnemer deleted successfully.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                e.getMessage();
+            }
+
+        } else {
+            System.out.println("Deelnemer not found.");
+        }
+    }
+
+    public String getGewijzigdeDeelnemer(String uuid) {
+        ForceApi api = connectToSalesforce();
+        // Query the newest Deelnemer__c record and order by CreatedDate in descending order
+        String query = "SELECT Id, Name, familie_naam__c, Phone__c, Email__c, Bedrijf__c, date_of_birth__c, Deelnemer_uuid__c FROM gewijzigde_Deelnemer__c WHERE Deelnemer_uuid__c = '" + uuid + "'";
+
+        // Perform the query and get the first result
+        QueryResult<Map> queryResult = api.query(query);
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (queryResult.getTotalSize() > 0) {
+            Map<String, Object> deelnemer = queryResult.getRecords().get(0);
+            try {
+                // Convert the map object to JSON string
+                String jsonDeelnemer = objectMapper.writeValueAsString(deelnemer);
+                return jsonDeelnemer;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("No records found.");
+        }
+        return null;
+
     }
 
 

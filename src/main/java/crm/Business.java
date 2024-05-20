@@ -28,6 +28,9 @@ public class Business {
     @XmlAttribute(name = "uuid")
     private String uuid;
 
+    public Business() {
+    }
+
     public String getUuid() {
         return uuid;
     }
@@ -36,11 +39,6 @@ public class Business {
         this.uuid = uuid;
     }
 
-
-    public Business() {
-        this.service = "frontend";
-        this.method = "create";
-    }
 
     public String getName() {
         return name;
@@ -90,11 +88,11 @@ public class Business {
         this.service = service;
     }
 
-    public String getMethod() {
-        return method;
-    }
-
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public String getMethod() {
+        return method;
     }
 }

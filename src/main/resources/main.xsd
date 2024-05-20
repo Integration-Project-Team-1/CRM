@@ -1,7 +1,18 @@
 <?xml version="1.0"?>
+
+<!--
+    This is de main XSD file to use for validating messages,
+    you can treat it as a library and import only the types
+    you need for validating your messages.
+
+    NOTES:
+    - you might see "timestamp" as a positiveInteger, this
+      is because it is meant to be seconds since the Epoch.
+-->
+
 <xs:schema
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
-        version="0.3.8"
+        version="1.1"
         targetNamespace="http://ehb.local"
         xmlns:r="http://ehb.local"
         elementFormDefault="qualified">
@@ -30,6 +41,32 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <!-- LOG_LEVEL TYPE -->
+    <xs:simpleType name="log_level">
+        <xs:restriction base="xs:token">
+            <xs:enumeration value="DEBUG"/>
+            <xs:enumeration value="INFO"/>
+            <xs:enumeration value="WARNING"/>
+            <xs:enumeration value="ERROR"/>
+            <xs:enumeration value="CRITICAL"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- SERVICE TYPE -->
+    <xs:simpleType name="service">
+        <xs:restriction base="xs:token">
+            <xs:enumeration value="inventory"/>
+            <xs:enumeration value="crm"/>
+            <xs:enumeration value="facturatie"/>
+            <xs:enumeration value="frontend"/>
+            <xs:enumeration value="kassa"/>
+            <xs:enumeration value="mailing"/>
+            <xs:enumeration value="monitoring"/>
+            <xs:enumeration value="planning"/>
+            <xs:enumeration value="uuid"/>
+        </xs:restriction>
+    </xs:simpleType>
+
     <!-- VAT TYPE -->
     <xs:simpleType name="VAT">
         <xs:restriction base="xs:token">
@@ -47,7 +84,7 @@
 
     <!-- METHOD TYPE -->
     <xs:simpleType name="method">
-        <xs:restriction base="xs:string">
+        <xs:restriction base="xs:token">
             <xs:enumeration value="create"/>
             <xs:enumeration value="update"/>
             <xs:enumeration value="delete"/>
@@ -57,7 +94,7 @@
 
     <!-- UUID TYPE -->
     <xs:simpleType name="uuid">
-        <xs:restriction base="xs:string">
+        <xs:restriction base="xs:token">
             <xs:pattern value="([0-9]|[a-f]|[A-F]){8}-([0-9]|[a-f]|[A-F]){4}-([0-9]|[a-f]|[A-F]){4}-([0-9]|[a-f]|[A-F]){4}-([0-9]|[a-f]|[A-F]){12}"/>
         </xs:restriction>
     </xs:simpleType>
@@ -68,6 +105,8 @@
     <!-- BUSINESS TYPE -->
     <xs:complexType name="business">
         <xs:all>
+            <xs:element name="service" type="r:service"/>
+            <xs:element name="method" type="r:method"/>
             <xs:element name="name" type="r:nztoken"/>
             <xs:element name="VAT" type="r:VAT"/>
             <xs:element name="email" type="r:email"/>
@@ -90,22 +129,7 @@
             <xs:element name="date_of_birth" type="xs:date"/>
         </xs:all>
         <xs:attribute name="uuid" type="r:uuid" use="required"/>
-        <xs:attribute name="fromBusiness" type="xs:boolean" use="required"/>
     </xs:complexType>
-
-    <!-- SERVICE TYPE -->
-    <xs:simpleType name="service">
-        <xs:restriction base="xs:token">
-            <xs:enumeration value="inventory"/>
-            <xs:enumeration value="crm"/>
-            <xs:enumeration value="facturatie"/>
-            <xs:enumeration value="frontend"/>
-            <xs:enumeration value="kassa"/>
-            <xs:enumeration value="mailing"/>
-            <xs:enumeration value="monitoring"/>
-            <xs:enumeration value="planning"/>
-        </xs:restriction>
-    </xs:simpleType>
 
     <!-- PRODUCT TYPE -->
     <xs:complexType name="product">
@@ -140,7 +164,7 @@
             <xs:element name="service" type="r:service"/>
             <xs:element name="timestamp" type="xs:positiveInteger"/>
             <xs:element name="status" type="r:nztoken"/>
-            <xs:element name="error" type="xs:positiveInteger" minOccurs="0"/>
+            <xs:element name="error" type="xs:token"/>
         </xs:all>
     </xs:complexType>
 
@@ -162,7 +186,7 @@
 
     <!-- BILL TYPE -->
     <xs:complexType name="bill">
-        <xs:sequence>
+        <xs:all>
             <xs:element name="filename" type="r:nztoken"/>
             <xs:element name="data">
                 <xs:simpleType>
@@ -171,51 +195,57 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
-        </xs:sequence>
+        </xs:all>
     </xs:complexType>
 
     <!-- BILLING TYPE -->
     <xs:complexType name="billing">
-        <xs:sequence>
+        <xs:all>
             <xs:element name="service" type="r:nztoken"/>
             <xs:element name="business" type="r:nztoken"/>
             <xs:element name="bill" type="r:bill"/>
-        </xs:sequence>
+        </xs:all>
     </xs:complexType>
 
     <!-- INVENTORY TYPE -->
     <xs:complexType name="inventory">
-        <xs:sequence>
+        <xs:all>
             <xs:element name="name" type="r:nztoken"/>
             <xs:element name="quantity" type="xs:positiveInteger"/>
             <xs:element name="imageUrl" type="xs:anyURI" minOccurs="0"/>
-            <xs:element name="description" type="r:nztoken" minOccurs="0"/>
-            <xs:element name="category" type="r:nztoken" minOccurs="0"/>
+            <xs:element name="method" type="r:method"/>
+        </xs:all>
+        <xs:attribute name="uuid" type="r:uuid" use="required"/>
+    </xs:complexType>
+
+    <!-- INTERNAL_LOG TYPE -->
+    <xs:complexType name="internal_log">
+        <xs:all>
             <xs:element name="service" type="r:service"/>
-        </xs:sequence>
+            <xs:element name="timestamp" type="xs:positiveInteger"/>
+            <xs:element name="log_level" type="r:log_level"/>
+            <xs:element name="log_message" type="r:nztoken"/>
+        </xs:all>
     </xs:complexType>
 
-    <!-- STATUS TYPE -->
-    <xs:complexType name="status">
-        <xs:attribute name="name" use="required">
-            <xs:simpleType>
-                <xs:restriction base="xs:token">
-                    <xs:enumeration value="ERROR"/>
-                    <xs:enumeration value="INFO"/>
-                    <xs:enumeration value="WARNING"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-    </xs:complexType>
-
-    <!-- LOG TYPE -->
-    <xs:complexType name="log">
-        <xs:sequence>
-            <xs:element name="timestamp" type="xs:dateTime"/>
+    <!-- RABBITMQ_LOG TYPE -->
+    <xs:complexType name="rabbitmq_log">
+        <xs:all>
             <xs:element name="service" type="r:service"/>
-            <xs:element name="status" type="r:status"/>
-            <xs:element name="message" type="r:nztoken"/>
-        </xs:sequence>
+            <xs:element name="timestamp" type="xs:positiveInteger"/>
+            <xs:element name="original_queue" type="r:nztoken"/>
+            <xs:element name="original_routing_key" type="r:nztoken"/>
+        </xs:all>
     </xs:complexType>
 
+    <!-- CALENDAR TYPE -->
+    <xs:complexType name="calendar">
+        <xs:all>
+            <xs:element name="service" type="r:service"/>
+            <xs:element name="method" type="r:method"/>
+            <xs:element name="calendarId" type="r:nztoken"/>
+            <xs:element name="calendarURL" type="xs:anyURI"/>
+        </xs:all>
+        <xs:attribute name="uuid" type="r:uuid" use="required"/>
+    </xs:complexType>
 </xs:schema>

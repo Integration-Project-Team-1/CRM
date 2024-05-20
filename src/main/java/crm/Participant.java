@@ -33,9 +33,6 @@ public class Participant {
     @XmlAttribute( name = "uuid")
     private String uuid;
 
-    @XmlAttribute(name = "fromBusiness")
-    private String fromBusiness;
-
     public Date getDateOfBirth() {
         return dateOfBirth;
     }
@@ -50,14 +47,6 @@ public class Participant {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
-    }
-
-    public String getFromBusiness() {
-        return fromBusiness;
-    }
-
-    public void setFromBusiness(String fromBusiness) {
-        this.fromBusiness = fromBusiness;
     }
 
     public Participant() {

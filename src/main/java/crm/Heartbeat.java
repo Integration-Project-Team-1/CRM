@@ -20,6 +20,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.concurrent.TimeoutException;
 
+import static crm.Consumer.validateXML;
+
 //annotation are part of jaxb
 @XmlRootElement(name = "heartbeat", namespace = "http://ehb.local")
 @XmlType(propOrder = {"service", "timestamp", "error", "status"})
@@ -97,13 +99,13 @@ public class Heartbeat {
                 "<error>" + this.getError() + "</error>" +
                 "</heartbeat>";
 
-       // if (!validateXML(realXml,xsd)){
+        if (!validateXML(realXml,xsd)){
 
-        //    System.out.println("XML validation failed. crm.Heartbeat not sent");
-      //      return null; // if validation fails the method stops and heartbeat is not sent
-     //   }
+            System.out.println("XML validation failed. crm.Heartbeat not sent");
+            return null; // if validation fails the method stops and heartbeat is not sent
+        }
 
-      //  System.out.println("validation succesful");
+        System.out.println("validation succesful");
 
         if (this.getError() == 1){
 
@@ -113,8 +115,8 @@ public class Heartbeat {
         realXml = realXml.replace("xmlns=\"http://ehb.local\"", "");
         realXml = realXml.replaceAll("<heartbeat\\s+", "<heartbeat");
 
-        // Print the XML
-        //System.out.println(realXml);
+         //Print the XML
+        System.out.println(realXml);
 
 
         return realXml;
