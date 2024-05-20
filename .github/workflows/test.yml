@@ -25,6 +25,11 @@ jobs:
           hostname
           pwd
 
+      - name: "build crm-app"
+        run: |
+          docker build -t crm-app .
+
+
   deploy:
     name: Deploy to Testing
     runs-on: development
