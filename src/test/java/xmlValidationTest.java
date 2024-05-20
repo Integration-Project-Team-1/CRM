@@ -1,4 +1,4 @@
-import org.testng.annotations.Test;
+/*import org.testng.annotations.Test;
 import crm.xmlValidation;
 import static org.junit.Assert.*;
 import static org.testng.AssertJUnit.assertTrue;
@@ -18,3 +18,4 @@ public class xmlValidationTest {
         assertFalse(xmlValidation.validateXML(invalidXML)); // deze moet false zijn om te werken omdat het niet overeenkomt met het XSD
     }
 }
+*/

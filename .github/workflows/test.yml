@@ -16,11 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout xmlxsd
-        uses: actions/checkout@v4
-        with:
-            repository: Integration-Project-Team-1/xmlxsd
-            ssh-key: ${{ secrets.RUNNER_TEST_SSH }}
+
 
       - name: "Debug: System Info"
         run: |
@@ -29,9 +25,16 @@ jobs:
           hostname
           pwd
 
+      - name: "build crm-app"
+        run: |
+          docker build -t crm-app .
+
+
   deploy:
     name: Deploy to Testing
     runs-on: test
+    needs: Build
+
 
     env:
       DEV_HOST: ${{ secrets.DEV_HOST }}

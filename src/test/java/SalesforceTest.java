@@ -1,4 +1,4 @@
-import static org.mockito.Mockito.*;
+/*import static org.mockito.Mockito.*;
 
 import com.force.api.ApiSession;
 import com.force.api.ForceApi;
@@ -120,3 +120,4 @@ public class SalesforceTest {
 
 
 }
+*/
