@@ -39,6 +39,7 @@ public class Salesforce {
     private final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
     private String EXCHANGE = System.getenv("EXCHANGE");
     private String ROUTINGKEY = System.getenv("ROUTINGKEY");
+    private String MASTERUUID_URL = System.getenv("MASTERUUID_URL");
 
    private String oldJsonDeelnemer = "{\"Name\":\"John Doe\",\"familie_naam__c\":\"Doe\",\"Phone__c\":\"123456789\",\"Email__c\":\"john.doe@example.com\",\"Bedrijf__c\":\"ABC Company\",\"date_of_birth__c\":\"1990-01-01\",\"Deelnemer_uuid__c\":\"ca5378c7-c079-4d62-b4e1-de8cb4004eee\"}";
 
@@ -266,7 +267,7 @@ public class Salesforce {
                 System.out.println("Deelnemer UUID is null. Generating a new UUID...");
                 try {
                     // Create a new UUID by making a POST request to the provided URL
-                    URL url = new URL("http://10.2.160.11:55000/create");
+                    URL url = new URL(MASTERUUID_URL);
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod("POST");
                     connection.setRequestProperty("Content-Type", "application/json");
