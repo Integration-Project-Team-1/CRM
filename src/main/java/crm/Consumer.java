@@ -41,12 +41,6 @@ public class Consumer {
     //we create a connection within the constructor
     public Consumer() throws IOException {
 
-
-        // Controleren of CONSUMING_QUEUE is ingesteld
-        if (CONSUMING_QUEUE == null || CONSUMING_QUEUE.isEmpty()) {
-            throw new IllegalArgumentException("CONSUMING_QUEUE environment variable is not set.");
-        }
-
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(HOST);
         factory.setUsername(RABBITMQ_USERNAME);
@@ -57,19 +51,22 @@ public class Consumer {
             Connection connection = factory.newConnection();
             channel = connection.createChannel();
 
-            // Queue alleen declareren als CONSUMING_QUEUE is ingesteld
             channel.queueDeclare(CONSUMING_QUEUE, false, false, false, null);
             channel.queueBind(CONSUMING_QUEUE, EXCHANGE, ROUTINGKEY_USER);
             channel.queueBind(CONSUMING_QUEUE, EXCHANGE, ROUTINGKEY_BUSINESS);
             //channel.queueBind(CONSUMING_QUEUE, EXCHANGE, ROUTINGKEY_CONSUMPTION);
 
+
         } catch (Exception e) {
+
             e.getMessage();
             e.printStackTrace();
         }
 
         startConsuming();
+
     }
+
 
     public void startConsuming() throws IOException {
         // instance of Defaultconsumer + create an innerclass to customize handleDelivery at instantiation
