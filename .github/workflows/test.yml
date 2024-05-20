@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: development
+    runs-on: test
 
     steps:
       - name: "Debug: Docker"
@@ -32,7 +32,7 @@ jobs:
 
   deploy:
     name: Deploy to Testing
-    runs-on: development
+    runs-on: test
     needs: Build
 
 

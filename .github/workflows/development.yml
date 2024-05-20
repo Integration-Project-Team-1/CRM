@@ -1,4 +1,4 @@
-name: Development CI/CD Pipeline
+name: Testing CI/CD Pipeline
 
 on:
   push:
@@ -18,7 +18,6 @@ jobs:
 
 
 
-
       - name: "Debug: System Info"
         run: |
           whoami
@@ -26,12 +25,19 @@ jobs:
           hostname
           pwd
 
+      - name: "build crm-app"
+        run: |
+          docker build -t crm-app .
+
+
   deploy:
-    name: Deploy to Development
+    name: Deploy to Testing
     runs-on: development
+    needs: Build
+
 
     env:
-      DEV_HOST: ${{ secrets.DEV_DEV_HOST }}
+      DEV_HOST: ${{ secrets.DEV_HOST }}
       RABBITMQ_USERNAME: ${{ secrets.RABBITMQ_USERNAME }}
       RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
       RABBITMQ_PORT: ${{ secrets.RABBITMQ_PORT }}
@@ -48,14 +54,12 @@ jobs:
       SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD }}
       SALESFORCE_SECURITY_TOKEN: ${{ secrets.SALESFORCE_SECURITY_TOKEN }}
       SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME }}
-      MASTERUUID_URL: ${{ secrets.MASTERUUID_URL_DEV }}
-
 
     steps:
       - name: Check Docker Compose Syntax
         run: docker compose config
 
-      - name: Deploy to Development
+      - name: Deploy to Testing
         run: |
           docker compose down --volumes
           docker compose up -d
