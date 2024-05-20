@@ -7,18 +7,12 @@ import java.util.concurrent.*;
 public class Main {
     public static void main(String[] args) throws Exception {
 
-        // Create a ScheduledExecutorService to schedule the heartbeats to be sent within an interval
-        ScheduledExecutorService heartbeatScheduler = Executors.newScheduledThreadPool(1); // Use one thread to execute the scheduled heartbeats
-
-        // Schedule the task to send heartbeats every second
-        //heartbeatScheduler.scheduleAtFixedRate(() -> {
-         //   try {
-          //      Heartbeat heartbeat = new Heartbeat();
-          //      heartbeat.sendHeartbeat();
-         //   } catch (Exception e) {
-         //       e.printStackTrace();
-         //   }
-       // }, 0, 5, TimeUnit.SECONDS);
+        try {
+            Heartbeat heartbeat = new Heartbeat();
+            // The HeartbeatTask will start running automatically
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         //Create an ExecutorService to manage concurrent execution of the Consumer task
        ExecutorService executor = Executors.newCachedThreadPool();
