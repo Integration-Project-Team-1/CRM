@@ -23,9 +23,6 @@ jobs:
           hostname
           pwd
 
-      - name: "Build crm-app"
-        run: |
-          docker build -t crm-app .
 
   deploy:
     name: Deploy to Testing
@@ -63,4 +60,4 @@ jobs:
       - name: Deploy to Testing
         run: |
           docker compose down --volumes
-          docker compose up -d
+          docker compose up -d --build

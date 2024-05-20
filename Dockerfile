@@ -17,6 +17,10 @@ FROM openjdk:22-jdk
 
 WORKDIR /app
 
+RUN mkdir -p /app/src/main/resources
+
+COPY src/main/resources /app/src/main/resources
+
 # Copy the JAR file built in the previous stage
 COPY --from=build /app/target/CRM_Groep1-1.0-SNAPSHOT.jar .
 
