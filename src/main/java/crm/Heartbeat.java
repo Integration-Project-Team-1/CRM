@@ -1,12 +1,13 @@
-
 package crm;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.tools.json.JSONUtil;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.annotation.*;
 import org.xml.sax.SAXException;
+import java.time.Instant;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
@@ -18,18 +19,19 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
-
-import static crm.Consumer.validateXML;
 
 //annotation are part of jaxb
 @XmlRootElement(name = "heartbeat", namespace = "http://ehb.local")
 @XmlType(propOrder = {"service", "timestamp", "error", "status"})
 public class Heartbeat {
     private String service;
-    private String timestamp;
-    private int error;
+    private int timestamp;
+    private String error;
     private String status;
+    private Timer timer;
 
     private final String QUEUE_NAME_HEARTBEAT = System.getenv("QUEUE_NAME_HEARTBEAT");
     private final String HOST = System.getenv("DEV_HOST");
@@ -37,15 +39,18 @@ public class Heartbeat {
     private final String RABBITMQ_PASSWORD = System.getenv("RABBITMQ_PASSWORD");
     private final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
 
+
+
     public Heartbeat() throws Exception {
         setService("crm");
-        this.timestamp = generateTimestamp();
 
+        this.timer = new Timer();
+        this.timer.schedule(new HeartbeatTask(this), 0, 5000);
         if (isSalesforceAvailable()){
             this.status = "up";
-            this.error = 1;
+            this.error = "1";
         }else {
-            this.error = 550;
+            this.error = "550";
             this.status = "down";
         }
 
@@ -61,20 +66,19 @@ public class Heartbeat {
     }
 
     @XmlElement(name = "timestamp", namespace = "http://ehb.local")
-    public String getTimestamp() {
+    public int getTimestamp() {
         return timestamp;
+
     }
 
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
+
 
     @XmlElement(name = "error", namespace = "http://ehb.local")
-    public int getError() {
+    public String getError() {
         return error;
     }
 
-    public void setError(int error) {
+    public void setError(String error) {
         this.error = error;
     }
     @XmlElement(name = "status", namespace = "http://ehb.local")
@@ -85,12 +89,35 @@ public class Heartbeat {
     public void setStatus(String status) {
         this.status = status;
     }
+    private static class HeartbeatTask extends TimerTask {
+        private final Heartbeat heartbeat;
+
+        public HeartbeatTask(Heartbeat heartbeat) {
+            this.heartbeat = heartbeat;
+        } @Override
+        public void run() {
+            try {
+                if (false) {
+                    heartbeat.setError(heartbeat.getError());
+                    heartbeat.setStatus("down");
+                } else {
+                    heartbeat.setStatus("up");
+                    heartbeat.setError("");
+                }
+                heartbeat.sendHeartbeat();
+
+            } catch (Exception e) {
+                heartbeat.setError((String.valueOf(e)));
+                e.printStackTrace();
+            }
+        }}
+
 
     public String createXML() throws JAXBException{
         String xsd = "src/main/resources/include.template.xsd";
 
         System.out.println("calling createXML");
-        System.out.println(generateTimestamp());
+
 
         String realXml = "<heartbeat xmlns=\"http://ehb.local\">" +
                 "<service>" + this.getService() + "</service>" +
@@ -99,15 +126,15 @@ public class Heartbeat {
                 "<error>" + this.getError() + "</error>" +
                 "</heartbeat>";
 
-        if (!validateXML(realXml,xsd)){
+        // if (!validateXML(realXml,xsd)){
 
-            System.out.println("XML validation failed. crm.Heartbeat not sent");
-            return null; // if validation fails the method stops and heartbeat is not sent
-        }
+        //    System.out.println("XML validation failed. crm.Heartbeat not sent");
+        //      return null; // if validation fails the method stops and heartbeat is not sent
+        //   }
 
-        System.out.println("validation succesful");
+        //  System.out.println("validation succesful");
 
-        if (this.getError() == 1){
+        if (this.getError() == "1"){
 
             realXml = realXml.replace("<error>" + this.getError() + "</error>","<error></error>");
         }
@@ -115,45 +142,36 @@ public class Heartbeat {
         realXml = realXml.replace("xmlns=\"http://ehb.local\"", "");
         realXml = realXml.replaceAll("<heartbeat\\s+", "<heartbeat");
 
-         //Print the XML
-        System.out.println(realXml);
+        // Print the XML
+        //System.out.println(realXml);
 
 
         return realXml;
     }
     public void sendHeartbeat() throws Exception {
-        System.out.println("calling send heartbeat");
-
-
-        //create a connectionfactory and set the host on which rabbitmq runs
+        this.timestamp = (int) (Instant.now().getEpochSecond());
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(HOST);
-        factory.setUsername(RABBITMQ_USERNAME);
-        factory.setPassword(RABBITMQ_PASSWORD);
-        factory.setPort(RABBITMQ_PORT);
 
-        try{
-            //create a connection with the server and a channel where we communicate through
-            Connection connection = factory.newConnection();
-            System.out.println("connection made");
-            Channel channel = connection.createChannel();
-            System.out.println("Channel created");
-            //create a queue before publishing to it, this line will be ignored if the queue already exists
-            channel.queueDeclare(QUEUE_NAME_HEARTBEAT,false,false,false,null);
-
-            // create an xml document
-            String xml = createXML();
-
-
-            //xml sent to the queue
-            channel.basicPublish("", QUEUE_NAME_HEARTBEAT, null, xml.getBytes("UTF-8"));
-            System.out.println("heartbeat has been sent succesfully");
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+            String message = "<heartbeat>" +
+                    "<service>" + this.getService() + "</service>" +
+                    "<timestamp>" + this.getTimestamp() + "</timestamp>" +
+                    "<status>" + this.getStatus() + "</status>" +
+                    "<error>" + this.getError() + "</error>" +
+                    "</heartbeat>";
+            channel.basicPublish("", "heartbeat_queue", null, message.getBytes("UTF-8"));
 
         }catch(IOException | TimeoutException e){
             System.out.println("heartbeat was not sent due to error");
             e.printStackTrace();
 
         }
+    }
+
+    public HttpURLConnection openConnection(URL url) throws IOException {
+        return (HttpURLConnection) url.openConnection();
     }
 
     public static boolean isSalesforceAvailable() throws Exception {
@@ -199,4 +217,3 @@ public class Heartbeat {
     }
 
 }
-

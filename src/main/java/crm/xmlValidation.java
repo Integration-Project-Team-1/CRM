@@ -25,7 +25,7 @@ public class xmlValidation {
             Validator validator=schema.newValidator();
             validator.validate(new StreamSource(new StringReader(xml))); //validating the xml against the xsd using streamsource object created from stringreader containing the xml
         }catch (IOException | SAXException e){
-            System.out.println("Exception" + e.getMessage());
+            System.out.println("XML validation failed" + e.getMessage());
             return false;
         }
 
