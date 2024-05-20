@@ -72,6 +72,10 @@ public class Heartbeat {
 
     }
 
+    public void setTimestamp(int timestamp) {
+        this.timestamp = timestamp;
+    }
+
 
 
     @XmlElement(name = "error", namespace = "http://ehb.local")
@@ -90,6 +94,9 @@ public class Heartbeat {
     public void setStatus(String status) {
         this.status = status;
     }
+
+
+
     private static class HeartbeatTask extends TimerTask {
         private final Heartbeat heartbeat;
 
