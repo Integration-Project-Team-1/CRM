@@ -16,8 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-
-
       - name: "Debug: System Info"
         run: |
           whoami
@@ -29,35 +27,36 @@ jobs:
         run: |
           docker build -t crm-app .
 
-
   deploy:
     name: Deploy to Testing
     runs-on: development
-    needs: Build
-
-
-    env:
-      echo "DEV_HOST=${{ secrets.DEV_DEV_HOST }}" >> .env
-      echo "RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }}" >> .env
-      echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> .env
-      echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" >> .env
-      echo "CONSUMER_KEY=${{ secrets.CONSUMER_KEY }}" >> .env
-      echo "CONSUMER_SECRET=${{ secrets.CONSUMER_SECRET }}" >> .env
-      echo "CONSUMING_QUEUE=${{ secrets.CONSUMING_QUEUE }}" >> .env
-      echo "EXCHANGE=${{ secrets.EXCHANGE }}" >> .env
-      echo "LOGIN_URL=${{ secrets.LOGIN_URL }}" >> .env
-      echo "QUEUE_NAME_HEARTBEAT=${{ secrets.QUEUE_NAME_HEARTBEAT }}" >> .env
-      echo "ROUTINGKEY=${{ secrets.ROUTINGKEY }}" >> .env
-      echo "ROUTINGKEY_BUSINESS=${{ secrets.ROUTINGKEY_BUSINESS }}" >> .env
-      echo "ROUTINGKEY_CONSUMPTION=${{ secrets.ROUTINGKEY_CONSUMPTION }}" >> .env
-      echo "ROUTINGKEY_USER=${{ secrets.ROUTINGKEY_USER }}" >> .env
-      echo "SALESFORCE_PASSWORD=${{ secrets.SALESFORCE_PASSWORD }}" >> .env
-      echo "SALESFORCE_SECURITY_TOKEN=${{ secrets.SALESFORCE_SECURITY_TOKEN }}" >> .env
-      echo "SALESFORCE_USERNAME=${{ secrets.SALESFORCE_USERNAME }}" >> .env
-      echo "MASTERUUID_URL=${{ secrets.MASTERUUID_URL_DEV }}" >> .env
-
+    needs: build
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          echo "DEV_HOST=${{ secrets.DEV_DEV_HOST }}" >> .env
+          echo "RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }}" >> .env
+          echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> .env
+          echo "RABBITMQ_PORT=${{ secrets.RABBITMQ_PORT }}" >> .env
+          echo "CONSUMER_KEY=${{ secrets.CONSUMER_KEY }}" >> .env
+          echo "CONSUMER_SECRET=${{ secrets.CONSUMER_SECRET }}" >> .env
+          echo "CONSUMING_QUEUE=${{ secrets.CONSUMING_QUEUE }}" >> .env
+          echo "EXCHANGE=${{ secrets.EXCHANGE }}" >> .env
+          echo "LOGIN_URL=${{ secrets.LOGIN_URL }}" >> .env
+          echo "QUEUE_NAME_HEARTBEAT=${{ secrets.QUEUE_NAME_HEARTBEAT }}" >> .env
+          echo "ROUTINGKEY=${{ secrets.ROUTINGKEY }}" >> .env
+          echo "ROUTINGKEY_BUSINESS=${{ secrets.ROUTINGKEY_BUSINESS }}" >> .env
+          echo "ROUTINGKEY_CONSUMPTION=${{ secrets.ROUTINGKEY_CONSUMPTION }}" >> .env
+          echo "ROUTINGKEY_USER=${{ secrets.ROUTINGKEY_USER }}" >> .env
+          echo "SALESFORCE_PASSWORD=${{ secrets.SALESFORCE_PASSWORD }}" >> .env
+          echo "SALESFORCE_SECURITY_TOKEN=${{ secrets.SALESFORCE_SECURITY_TOKEN }}" >> .env
+          echo "SALESFORCE_USERNAME=${{ secrets.SALESFORCE_USERNAME }}" >> .env
+          echo "MASTERUUID_URL=${{ secrets.MASTERUUID_URL_DEV }}" >> .env
+
       - name: Check Docker Compose Syntax
         run: docker compose config
 
