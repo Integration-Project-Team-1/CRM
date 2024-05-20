@@ -15,6 +15,15 @@
     </properties>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>wsdl/**</include>
+                </includes>
+            </resource>
+        </resources>
+      
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -36,8 +45,8 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
+      
     </build>
 
 
@@ -75,6 +84,68 @@
             <artifactId>jaxb-impl</artifactId>
             <version>2.2.4-1</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.frejo</groupId>
+            <artifactId>force-rest-api</artifactId>
+            <version>0.0.45</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.cometd.java</groupId>
+            <artifactId>cometd-java-client</artifactId>
+            <version>4.0.9</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20210307</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.mashape.unirest</groupId>
+            <artifactId>unirest-java</artifactId>
+            <version>1.4.9</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.pontusvision.salesforce</groupId>
+            <artifactId>emp-connector</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.cometd.java</groupId>
+            <artifactId>cometd-java-client-http-jetty</artifactId>
+            <version>7.0.10</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
         </dependency>
 
 
