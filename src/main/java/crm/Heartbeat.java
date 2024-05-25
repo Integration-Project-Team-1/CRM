@@ -124,12 +124,13 @@ public class Heartbeat {
 
         System.out.println("calling createXML");
 
+        String errorValue = this.getError() != null ? this.getError() : "";
 
         String realXml = "<heartbeat xmlns=\"http://ehb.local\">" +
                 "<service>" + this.getService() + "</service>" +
                 "<timestamp>" + this.getTimestamp() + "</timestamp>" +
                 "<status>" + this.getStatus() + "</status>" +
-                "<error>" + this.getError() + "</error>" +
+                "<error>" + errorValue + "</error>" +
                 "</heartbeat>";
 
          if (!validateXML(realXml)){
@@ -162,13 +163,14 @@ public class Heartbeat {
         factory.setPassword(RABBITMQ_PASSWORD);
         factory.setPort(RABBITMQ_PORT);
 
+        String errorValue = this.getError() != null ? this.getError() : ""; // Als this.getError() null is, gebruik dan een lege string
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
             String message = "<heartbeat>" +
                     "<service>" + this.getService() + "</service>" +
                     "<timestamp>" + this.getTimestamp() + "</timestamp>" +
                     "<status>" + this.getStatus() + "</status>" +
-                    "<error>" + this.getError() + "</error>" +
+                    "<error>" + errorValue + "</error>" +
                     "</heartbeat>";
             channel.basicPublish("", QUEUE_NAME_HEARTBEAT, null, message.getBytes("UTF-8"));
 
