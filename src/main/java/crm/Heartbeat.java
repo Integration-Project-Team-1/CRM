@@ -19,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
@@ -141,7 +142,7 @@ public class Heartbeat {
 
           System.out.println("validation succesful");
 
-        if ("1".equals(this.getError())) {
+        if (Objects.equals(this.getError(), "1")){ {
 
             realXml = realXml.replace("<error>" + this.getError() + "</error>","<error></error>");
         }
@@ -163,19 +164,14 @@ public class Heartbeat {
         factory.setPassword(RABBITMQ_PASSWORD);
         factory.setPort(RABBITMQ_PORT);
 
-        String service = this.getService() != null ? this.getService() : "";
-        int timestamp = this.getTimestamp();
-        String status = this.getStatus() != null ? this.getStatus() : "";
-        String error = this.getError() != null ? this.getError() : "";
-
 
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
             String message = "<heartbeat>" +
-                    "<service>" + service + "</service>" +
-                    "<timestamp>" + timestamp + "</timestamp>" +
-                    "<status>" + status + "</status>" +
-                    "<error>" + error + "</error>" +
+                    "<service>" + this.getService() + "</service>" +
+                    "<timestamp>" + this.getTimestamp() + "</timestamp>" +
+                    "<status>" + this.getStatus() + "</status>" +
+                    "<error>" + this.getError() + "</error>" +
                     "</heartbeat>";
             channel.basicPublish("", QUEUE_NAME_HEARTBEAT, null, message.getBytes("UTF-8"));
 
