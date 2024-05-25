@@ -126,7 +126,6 @@ public class Heartbeat {
         System.out.println("calling createXML");
 
 
-
         String realXml = "<heartbeat xmlns=\"http://ehb.local\">" +
                 "<service>" + this.getService() + "</service>" +
                 "<timestamp>" + this.getTimestamp() + "</timestamp>" +
@@ -134,15 +133,15 @@ public class Heartbeat {
                 "<error>" + this.getError() + "</error>" +
                 "</heartbeat>";
 
-         if (!validateXML(realXml)){
+        if (!validateXML(realXml)){
 
             System.out.println("XML validation failed. crm.Heartbeat not sent");
-              return null; // if validation fails the method stops and heartbeat is not sent
-           }
+            return null; // if validation fails the method stops and heartbeat is not sent
+        }
 
-          System.out.println("validation succesful");
+        System.out.println("validation succesful");
 
-        if (Objects.equals(this.getError(), "1")){ {
+        if (Objects.equals(this.getError(), "1")){
 
             realXml = realXml.replace("<error>" + this.getError() + "</error>","<error></error>");
         }
@@ -163,7 +162,6 @@ public class Heartbeat {
         factory.setUsername(RABBITMQ_USERNAME);
         factory.setPassword(RABBITMQ_PASSWORD);
         factory.setPort(RABBITMQ_PORT);
-
 
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
@@ -228,4 +226,4 @@ public class Heartbeat {
         return epochString;
     }
 
-}
+    }
