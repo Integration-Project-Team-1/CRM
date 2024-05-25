@@ -1,88 +1,42 @@
-/*import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-
 import crm.Heartbeat;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HeartbeatTest {
 
     @Test
-    void testCreateXML()  {
-        Heartbeat heartbeat = null;
+    public void testCreateXML() {
         try {
-            heartbeat = new Heartbeat();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        heartbeat.setService("crm");
-        heartbeat.setStatus("up");
-        heartbeat.setError("0");
-
-
-        try {
+            Heartbeat heartbeat = new Heartbeat();
             String xml = heartbeat.createXML();
-            assertNotNull(xml);
-            assertTrue(xml.contains("<heartbeat>"));
-            assertTrue(xml.contains("<service>crm</service>"));
-
-            assertTrue(xml.contains("<status>up</status>"));
-            assertTrue(xml.contains("<error>0</error>"));
+            assertNotNull(xml); // Zorg ervoor dat XML niet null is
+            assertTrue(xml.contains("<heartbeat>")); // Controleer of het XML-element aanwezig is
+            assertTrue(xml.contains("<service>crm</service>")); // Controleer of servicenaam correct is
+            assertTrue(xml.contains("<status>")); // Controleer of status aanwezig is
+            assertTrue(xml.contains("<error>")); // Controleer of error aanwezig is
         } catch (Exception e) {
-            fail("Exception occurred: " + e.getMessage());
+            fail("Exception thrown: " + e.getMessage()); // Mislukken als er een uitzondering wordt gegooid
         }
     }
 
-
-
-
     @Test
-    void testSendHeartbeat() throws Exception {
-        // Mocking the connection, channel, and connection factory
-        ConnectionFactory factory = Mockito.mock(ConnectionFactory.class);
-        Connection connection = Mockito.mock(Connection.class);
-        com.rabbitmq.client.Channel channel = Mockito.mock(com.rabbitmq.client.Channel.class); // Gebruik de juiste Channel-klasse
-
-        Mockito.when(factory.newConnection()).thenReturn(connection);
-        Mockito.when(connection.createChannel()).thenReturn(channel); // Gebruik de juiste Channel-mock
-
-        // Creating an instance of Heartbeat
-        Heartbeat heartbeat = new Heartbeat();
-        heartbeat.setService("crm");
-        heartbeat.setStatus("up");
-        heartbeat.setError("0");
-
-        // Capturing System.out.println() output
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PrintStream printStream = new PrintStream(outputStream);
-        System.setOut(printStream);
-
-        // Calling the method
-        heartbeat.sendHeartbeat();
-
-        // Verifying the expected output
-        String expectedOutput = "heartbeat was not sent due to error";
-        assertTrue(outputStream.toString().contains(expectedOutput), "Expected output not found");
-    }
-
-
-
-    @Test
-    void testIsSalesforceAvailable() {
+    public void testSendHeartbeat() {
         try {
-            boolean result = Heartbeat.isSalesforceAvailable();
-            assertTrue(result);
+            Heartbeat heartbeat = new Heartbeat();
+            heartbeat.sendHeartbeat();
+            // Als er geen uitzondering wordt gegooid, wordt de test als geslaagd beschouwd
         } catch (Exception e) {
-            fail("Exception occurred: " + e.getMessage());
+            fail("Exception thrown: " + e.getMessage()); // Mislukken als er een uitzondering wordt gegooid
         }
     }
 
-    // You can add more test cases for other methods if needed
+    @Test
+    public void testIsSalesforceAvailable() {
+        try {
+            assertTrue(Heartbeat.isSalesforceAvailable()); // Controleer of Salesforce beschikbaar is
+        } catch (Exception e) {
+            fail("Exception thrown: " + e.getMessage()); // Mislukken als er een uitzondering wordt gegooid
+        }
+    }
 }
-*/
