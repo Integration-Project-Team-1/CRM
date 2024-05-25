@@ -124,13 +124,13 @@ public class Heartbeat {
 
         System.out.println("calling createXML");
 
-        String errorValue = this.getError() != null ? this.getError() : "";
+
 
         String realXml = "<heartbeat xmlns=\"http://ehb.local\">" +
                 "<service>" + this.getService() + "</service>" +
                 "<timestamp>" + this.getTimestamp() + "</timestamp>" +
                 "<status>" + this.getStatus() + "</status>" +
-                "<error>" + errorValue + "</error>" +
+                "<error>" + this.getError() + "</error>" +
                 "</heartbeat>";
 
          if (!validateXML(realXml)){
@@ -141,7 +141,7 @@ public class Heartbeat {
 
           System.out.println("validation succesful");
 
-        if (this.getError() == "1"){
+        if ("1".equals(this.getError())) {
 
             realXml = realXml.replace("<error>" + this.getError() + "</error>","<error></error>");
         }
@@ -163,14 +163,19 @@ public class Heartbeat {
         factory.setPassword(RABBITMQ_PASSWORD);
         factory.setPort(RABBITMQ_PORT);
 
-        String errorValue = this.getError() != null ? this.getError() : ""; // Als this.getError() null is, gebruik dan een lege string
+        String service = this.getService() != null ? this.getService() : "";
+        int timestamp = this.getTimestamp();
+        String status = this.getStatus() != null ? this.getStatus() : "";
+        String error = this.getError() != null ? this.getError() : "";
+
+
         try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
             String message = "<heartbeat>" +
-                    "<service>" + this.getService() + "</service>" +
-                    "<timestamp>" + this.getTimestamp() + "</timestamp>" +
-                    "<status>" + this.getStatus() + "</status>" +
-                    "<error>" + errorValue + "</error>" +
+                    "<service>" + service + "</service>" +
+                    "<timestamp>" + timestamp + "</timestamp>" +
+                    "<status>" + status + "</status>" +
+                    "<error>" + error + "</error>" +
                     "</heartbeat>";
             channel.basicPublish("", QUEUE_NAME_HEARTBEAT, null, message.getBytes("UTF-8"));
 
