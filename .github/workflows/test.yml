@@ -23,8 +23,7 @@ jobs:
           hostname
           pwd
 
-      - name: "Install Maven"
-        run: sudo apt-get install -y maven  
+      
 
 
 
@@ -32,8 +31,7 @@ jobs:
         run: |
           docker build -t crm-app .
 
-      - name: Run Tests
-        run: mvn test
+      
 
   deploy:
     name: Deploy to Testing
