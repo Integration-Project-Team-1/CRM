@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: test
+    runs-on:  test
 
     steps:
       - name: Checkout code
@@ -20,11 +20,15 @@ jobs:
           distribution: 'adopt'
           java-version: '21'
 
-      
+      - name: Install Maven
+        run: sudo apt-get install -y maven
+
+      - name: Build with Maven
+        run: mvn clean install
 
   test:
     name: Run Unit and Integration Tests
-    runs-on: test
+    runs-on:  test
     needs: build
 
     steps:
@@ -36,6 +40,9 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '21'
+
+      - name: Install Maven
+        run: sudo apt-get install -y maven
 
       - name: Run Unit Tests
         run: mvn test
@@ -51,7 +58,7 @@ jobs:
 
   e2e-tests:
     name: Run End-to-End Tests
-    runs-on: test
+    runs-on:  test
     needs: test
 
     steps:
@@ -64,7 +71,10 @@ jobs:
           distribution: 'adopt'
           java-version: '21'
 
-      - name: Set up Selenium
+      - name: Install Maven
+        run: sudo apt-get install -y maven
+
+      - name: Set up Selenium (or other E2E testing framework)
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser
@@ -80,7 +90,7 @@ jobs:
 
   deploy:
     name: Deploy to Testing
-    runs-on: test
+    runs-on:  test
     needs: e2e-tests
 
     steps:
