@@ -1,4 +1,4 @@
-/*import crm.Heartbeat;
+import crm.Heartbeat;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -10,13 +10,13 @@ public class HeartbeatTest {
         try {
             Heartbeat heartbeat = new Heartbeat();
             String xml = heartbeat.createXML();
-            assertNotNull(xml); // Zorg ervoor dat XML niet null is
-            assertTrue(xml.contains("<heartbeat>")); // Controleer of het XML-element aanwezig is
-            assertTrue(xml.contains("<service>crm</service>")); // Controleer of servicenaam correct is
-            assertTrue(xml.contains("<status>")); // Controleer of status aanwezig is
-            assertTrue(xml.contains("<error>")); // Controleer of error aanwezig is
+            assertNotNull(xml, "XML should not be null");
+            assertTrue(xml.contains("<heartbeat>"), "XML should contain <heartbeat> element");
+            assertTrue(xml.contains("<service>crm</service>"), "XML should contain correct service name");
+            assertTrue(xml.contains("<status>"), "XML should contain status");
+            assertTrue(xml.contains("<error>"), "XML should contain error");
         } catch (Exception e) {
-            fail("Exception thrown: " + e.getMessage()); // Mislukken als er een uitzondering wordt gegooid
+            fail("Exception thrown: " + e.getMessage());
         }
     }
 
@@ -25,19 +25,17 @@ public class HeartbeatTest {
         try {
             Heartbeat heartbeat = new Heartbeat();
             heartbeat.sendHeartbeat();
-            // Als er geen uitzondering wordt gegooid, wordt de test als geslaagd beschouwd
         } catch (Exception e) {
-            fail("Exception thrown: " + e.getMessage()); // Mislukken als er een uitzondering wordt gegooid
+            fail("Exception thrown: " + e.getMessage());
         }
     }
 
     @Test
     public void testIsSalesforceAvailable() {
         try {
-            assertTrue(Heartbeat.isSalesforceAvailable()); // Controleer of Salesforce beschikbaar is
+            assertTrue(Heartbeat.isSalesforceAvailable(), "Salesforce should be available");
         } catch (Exception e) {
-            fail("Exception thrown: " + e.getMessage()); // Mislukken als er een uitzondering wordt gegooid
+            fail("Exception thrown: " + e.getMessage());
         }
     }
 }
-*/
