@@ -39,7 +39,7 @@ public class Heartbeat {
     private final String HOST = System.getenv("DEV_HOST");
     private final String RABBITMQ_USERNAME = System.getenv("RABBITMQ_USERNAME");
     private final String RABBITMQ_PASSWORD = System.getenv("RABBITMQ_PASSWORD");
-    private final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
+    private final int RABBITMQ_PORT = System.getenv("RABBITMQ_PORT") != null ? Integer.parseInt(System.getenv("RABBITMQ_PORT")) : 5672;
 
 
 
