@@ -1,63 +1,74 @@
-//import crm.Consumer;
-//import crm.Salesforce;
-//import org.junit.jupiter.api.Test;
-//
-//import javax.xml.bind.JAXBException;
-//import java.io.IOException;
-//
-//import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-//import static org.mockito.Mockito.*;
-//
-//public class ConsumerTest {
-//
-//    @Test
-//    public void testHandleDelivery_ParticipantCreation() throws IOException, JAXBException {
-//        // Mocks aanmaken
-//        Salesforce mockSalesforce = mock(Salesforce.class);
-//        Consumer consumer = new Consumer();
-//        consumer.salesforce = mockSalesforce;
-//
-//        // Simuleer een bericht voor het maken van een deelnemer
-//        String participantMessage = "<participant><method>create</method><uuid>123</uuid><name>Test Participant</name></participant>";
-//
-//        // Simuleer het aanroepen van handleDelivery
-//        assertDoesNotThrow(() -> consumer.handleDelivery("tag", null, null, participantMessage.getBytes()));
-//
-//        // Controleer of de juiste methoden van Salesforce zijn aangeroepen
-//        verify(mockSalesforce).createDeelnemer(any());
-//    }
-//
-//    @Test
-//    public void testHandleDelivery_ParticipantUpdate() throws IOException, JAXBException {
-//        // Mocks aanmaken
-//        Salesforce mockSalesforce = mock(Salesforce.class);
-//        Consumer consumer = new Consumer();
-//        consumer.salesforce = mockSalesforce;
-//
-//        // Simuleer een bericht voor het bijwerken van een deelnemer
-//        String participantMessage = "<participant><method>update</method><uuid>123</uuid><name>Updated Participant</name></participant>";
-//
-//        // Simuleer het aanroepen van handleDelivery
-//        assertDoesNotThrow(() -> consumer.handleDelivery("tag", null, null, participantMessage.getBytes()));
-//
-//        // Controleer of de juiste methoden van Salesforce zijn aangeroepen
-//        verify(mockSalesforce).updateDeelnemer(any(), any());
-//    }
-//
-//    @Test
-//    public void testHandleDelivery_ParticipantDeletion() throws IOException, JAXBException {
-//        // Mocks aanmaken
-//        Salesforce mockSalesforce = mock(Salesforce.class);
-//        Consumer consumer = new Consumer();
-//        consumer.salesforce = mockSalesforce;
-//
-//        // Simuleer een bericht voor het verwijderen van een deelnemer
-//        String participantMessage = "<participant><method>delete</method><uuid>123</uuid></participant>";
-//
-//        // Simuleer het aanroepen van handleDelivery
-//        assertDoesNotThrow(() -> consumer.handleDelivery("tag", null, null, participantMessage.getBytes()));
-//
-//        // Controleer of de juiste methoden van Salesforce zijn aangeroepen
-//        verify(mockSalesforce).deleteDeelnemer(any());
-//    }
-//}
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import crm.*;
+import java.io.IOException;
+import com.rabbitmq.client.Channel;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ConsumerTest {
+
+    @Mock
+    private Salesforce salesforce;
+
+    @Mock
+    private Channel channel;
+
+    private Consumer consumer;
+
+    @BeforeEach
+    public void setUp() throws IOException {
+        MockitoAnnotations.openMocks(this);
+        consumer = new Consumer();
+        consumer.setSalesforce(salesforce); // assuming setter method for salesforce
+        consumer.setChannel(channel); // assuming setter method for channel
+    }
+
+    @Test
+    public void testUnmarshalParticipant() throws Exception {
+        // Arrange
+        String participantXml = "<participant><method>create</method><uuid>123</uuid><name>John Doe</name></participant>";
+
+        // Act
+        Participant participant = consumer.unmarshalParticipant(participantXml);
+
+        // Assert
+        assertNotNull(participant);
+        assertEquals("123", participant.getUuid());
+        assertEquals("John Doe", participant.getLastname());
+        assertEquals("create", participant.getMethod());
+    }
+
+    @Test
+    public void testUnmarshalConsumption() throws Exception {
+        // Arrange
+        String consumptionXml = "<consumption><method>create</method><uuid>789</uuid><amount>10.99</amount></consumption>";
+
+        // Act
+        Consumption consumption = consumer.unmarshalConsumption(consumptionXml);
+
+        // Assert
+        assertNotNull(consumption);
+        assertEquals("789", consumption.getUuid());
+        assertEquals(10.99, consumption.getProducts());
+        assertEquals("create", consumption.getId());
+    }
+
+    @Test
+    public void testUnmarshalBusiness() throws Exception {
+        // Arrange
+        String businessXml = "<business><method>create</method><uuid>456</uuid><name>Acme Inc.</name></business>";
+
+        // Act
+        Business business = consumer.unmarshalBusiness(businessXml);
+
+        // Assert
+        assertNotNull(business);
+        assertEquals("456", business.getUuid());
+        assertEquals("Acme Inc.", business.getName());
+        assertEquals("create", business.getMethod());
+    }
+}
