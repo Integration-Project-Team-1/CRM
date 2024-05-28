@@ -12,7 +12,7 @@ import static crm.xmlValidation.validateXML;
 
 public class Rabbitmq {
 
-    private static final String HOST = "10.2.160.10"; //System.getenv("DEV_HOST");
+    private static final String HOST = System.getenv("DEV_HOST");
     private static final String RABBITMQ_USERNAME = System.getenv("RABBITMQ_USERNAME");
     private static final String RABBITMQ_PASSWORD = System.getenv("RABBITMQ_PASSWORD");
     private static final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
