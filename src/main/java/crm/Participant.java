@@ -3,6 +3,7 @@ package crm;
 import jakarta.xml.bind.annotation.*;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.datatype.XMLGregorianCalendar;
 import java.util.Date;
 
 @XmlRootElement
@@ -29,15 +30,15 @@ public class Participant {
     @XmlElement
     private String business;
     @XmlElement(name = "date_of_birth")
-    private Date dateOfBirth;
+    private String dateOfBirth;
     @XmlAttribute( name = "uuid")
     private String uuid;
 
-    public Date getDateOfBirth() {
+    public String  getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(String  dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 

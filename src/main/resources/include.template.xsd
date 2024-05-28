@@ -8,6 +8,7 @@
 
     <xs:element name="heartbeat" type="r:heartbeat"/>
     <xs:element name="participant" type="r:participant"/>
+    <xs:element name="business" type="r:business"/>
 
 
 </xs:schema>
