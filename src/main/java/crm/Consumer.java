@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Consumer {
     private final String CONSUMING_QUEUE = System.getenv("CONSUMING_QUEUE");
@@ -100,7 +102,7 @@ public class Consumer {
                             System.out.println("particpant deleted");
                         }
 
-                    } else if (message.contains("access_code")) {
+                    } else if (message.contains("access_code")&& !message.contains("<service>crm</service>") ) {
                         message.replace("<business xmlns=\"http://ehb.local\">","<business>");
                         Business business1 = (Business) unmarshalBusiness(message);
                         System.out.println(business1.toString());
@@ -144,7 +146,11 @@ public class Consumer {
         JAXBContext jaxbContext = JAXBContext.newInstance(Participant.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
         ByteArrayInputStream inputStream = new ByteArrayInputStream(xml.getBytes());
-        return (Participant) jaxbUnmarshaller.unmarshal(inputStream);
+        Participant participant = (Participant) jaxbUnmarshaller.unmarshal(inputStream);
+        String dateOfBirth = extractDateOfBirthFromXml(xml);
+        participant.setDateOfBirth(dateOfBirth);
+
+        return participant;
 
     }
 
@@ -163,6 +169,20 @@ public class Consumer {
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
         ByteArrayInputStream inputStream = new ByteArrayInputStream(xml.getBytes());
         return (Business) jaxbUnmarshaller.unmarshal(inputStream);
+    }
+
+    public static String extractDateOfBirthFromXml(String xml) {
+        // Regular expression to match the <date_of_birth> element and extract its value
+        String regex = "<date_of_birth>(.*?)</date_of_birth>";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(xml);
+
+        // If <date_of_birth> element found, retrieve its value
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return null; // Return null if date of birth not found
+        }
     }
 
 

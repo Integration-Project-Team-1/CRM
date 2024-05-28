@@ -25,6 +25,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static crm.Business.*;
+import static crm.Rabbitmq.sendLog;
+import static crm.Rabbitmq.sendToExchange;
+import static crm.XML.jsonBusinessToXml;
+import static crm.XML.jsonDeelnemerToXml;
 import static crm.xmlValidation.validateXML;
 
 public class Salesforce {
@@ -32,21 +37,9 @@ public class Salesforce {
     private static List<String> createdDeelnemersUuidList = new ArrayList<>();
     private static List<JSONObject> updatedJsonDeelnemersList = new ArrayList<>();
     private static List<String> deletedUsersUuidList = new ArrayList<>();
-
-    private final String HOST = System.getenv("DEV_HOST");
-    private final String RABBITMQ_USERNAME = System.getenv("RABBITMQ_USERNAME");
-    private final String RABBITMQ_PASSWORD = System.getenv("RABBITMQ_PASSWORD");
-    private final int RABBITMQ_PORT = Integer.parseInt(System.getenv("RABBITMQ_PORT"));
-    private String EXCHANGE = System.getenv("EXCHANGE");
-    private String ROUTINGKEY = System.getenv("ROUTINGKEY");
     private String MASTERUUID_URL = System.getenv("MASTERUUID_URL");
 
-   private String oldJsonDeelnemer = "{\"Name\":\"John Doe\",\"familie_naam__c\":\"Doe\",\"Phone__c\":\"123456789\",\"Email__c\":\"john.doe@example.com\",\"Bedrijf__c\":\"ABC Company\",\"date_of_birth__c\":\"1990-01-01\",\"Deelnemer_uuid__c\":\"ca5378c7-c079-4d62-b4e1-de8cb4004eee\"}";
-
-
-    Map<String, Object> lastDeelnemer = null;
-
-    public ForceApi connectToSalesforce() {
+    public static ForceApi connectToSalesforce() {
         String SALESFORCE_USERNAME = System.getenv("SALESFORCE_USERNAME");
         String SALESFORCE_PASSWORD = System.getenv("SALESFORCE_PASSWORD");
         String SALESFORCE_SECURITY_TOKEN = System.getenv("SALESFORCE_SECURITY_TOKEN");
@@ -82,6 +75,8 @@ public class Salesforce {
         deelnemerFields.put("date_of_birth__c", participant.getDateOfBirth());
         deelnemerFields.put("Deelnemer_uuid__c", participant.getUuid());
 
+        System.out.println(participant.getDateOfBirth());
+
         try{
 
             createdDeelnemersUuidList.add(participant.getUuid());
@@ -108,6 +103,7 @@ public class Salesforce {
         businessFields.put("Bedrijf_uuid__c", business.getUuid());
 
         try {
+            createdBusinessesUuidList.add(business.getUuid());
             // Maak het Business object aan in Salesforce
             api.createSObject("Business__c", businessFields);
         }catch (Exception e){
@@ -200,21 +196,6 @@ public class Salesforce {
         }
     }
 
-    public QueryResult<Map<String, Object>> retrieveDeelnemerByUUID(String uuid) {
-
-        ForceApi api = connectToSalesforce();
-        // Query the Deelnemer__c record by UUID
-        String query = "SELECT Name, familie_naam__c, Phone__c, Email__c, Bedrijf__c, date_of_birth__c FROM gewijzigde_Deelnemer__c WHERE Deelnemer_uuid__c = '" + uuid + "'";
-
-        // Perform the query
-        QueryResult<Map> queryResult = api.query(query);
-
-        System.out.println("yes");
-
-        // Cast the QueryResult to the appropriate generic type
-        return (QueryResult<Map<String, Object>>) (QueryResult<?>) queryResult;
-
-    }
 
     public String getDeelnemer(String uuid) {
         ForceApi api = connectToSalesforce();
@@ -330,27 +311,6 @@ public class Salesforce {
     }
 
 
-    public void showDeelnemer(String givenuuid) {
-        ForceApi api = connectToSalesforce();
-
-        String uuid = givenuuid;
-        QueryResult<Map<String, Object>> queryResult = retrieveDeelnemerByUUID(uuid);
-
-        // Print the retrieved records
-        System.out.println("Retrieved Deelnemer records:");
-        for (Map<String, Object> record : queryResult.getRecords()) {
-            System.out.println("Name: " + record.get("Name"));
-            System.out.println("Familie Naam: " + record.get("familie_naam__c"));
-            System.out.println("Phone: " + record.get("Phone__c"));
-            System.out.println("Email: " + record.get("Email__c"));
-            System.out.println("Bedrijf: " + record.get("Bedrijf__c"));
-            System.out.println("Date of Birth: " + record.get("date_of_birth__c"));
-            System.out.println("Deelnemer UUID: " + record.get("Deelnemer_uuid__c"));
-            System.out.println("-----------------------------");
-        }
-    }
-
-
     // Method to update a Business__c object
     public void updateBusiness(String uuid, Business updatedBusiness) {
         ForceApi api = connectToSalesforce();
@@ -361,6 +321,7 @@ public class Salesforce {
             try {
                 // Convert JSON string to Map
                 ObjectMapper objectMapper = new ObjectMapper();
+                JSONObject businessJsonObject = new JSONObject(businessJson);
                 Map<String, Object> businessRecord = objectMapper.readValue(businessJson, new TypeReference<Map<String, Object>>() {});
 
                 // Prepare fields to update
@@ -374,9 +335,11 @@ public class Salesforce {
                 System.out.println(updatedFields.values());
                 // Get the record ID
                 String id = (String) businessRecord.get("Id");
+                String gewijzigdeUuid = businessJsonObject.optString("Bedrijf_uuid__c");
 
                 // Update the Business in Salesforce using the retrieved ID and updated fields
                 api.updateSObject("Business__c", id, updatedFields);
+                deleteGewijzigdeBusiness(gewijzigdeUuid);
                 System.out.println("Business updated");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -404,6 +367,8 @@ public class Salesforce {
 
                 // Get the Business__c record ID
                 String businessId = (String) businessRecord.get("Id");
+
+                deletedBusinessesUuidList.add(uuid);
 
                 // Delete the Business__c object in Salesforce
                 api.deleteSObject("Business__c", businessId);
@@ -467,7 +432,7 @@ public class Salesforce {
             // Print the JSON representation of the new Deelnemer__c record
             System.out.println("New " + customObject + " record:");
             System.out.println(jsonDeelnemer);
-            String message = jsonToXml(jsonDeelnemer, method);
+            String message = jsonDeelnemerToXml(jsonDeelnemer, method);
             String uuid = extractUUID(message);
 
                 // Check if the message is not already in the list
@@ -560,7 +525,7 @@ public class Salesforce {
                     // Print the JSON representation of the new Deelnemer__c record
                     System.out.println("New " + customObject + " record:");
                     System.out.println(jsonDeelnemer);
-                    String message = jsonToXml(jsonDeelnemer, method);
+                    String message = jsonDeelnemerToXml(jsonDeelnemer, method);
 
                     // Add the new JSON to the list of existing JSON objects
                     updatedJsonDeelnemersList.add(newJson);
@@ -613,7 +578,7 @@ public class Salesforce {
                 // Print the JSON representation of the new Deelnemer__c record
                 System.out.println("New " + customObject + " record:");
                 System.out.println(jsonDeelnemer);
-                String message = jsonToXml(jsonDeelnemer, method);
+                String message = jsonDeelnemerToXml(jsonDeelnemer, method);
                 String uuid = extractUUID(message);
 
 
@@ -641,122 +606,6 @@ public class Salesforce {
         }
     }
 
-    public static String jsonToXml(String jsonString, String method) {
-        try {
-            JSONObject jsonObject = new JSONObject(jsonString);
-
-            String xmlData = String.format(
-                            "<participant xmlns=\"http://ehb.local\" uuid=\"%s\">%n" +
-                            "    <service>crm</service>%n" +
-                            "    <method>%s</method>%n" +
-                            "    <firstname>%s</firstname>%n" +
-                            "    <lastname>%s</lastname>%n" +
-                            "    <email>%s</email>%n" +
-                            "    <phone>%s</phone>%n" +
-                            "    <business>%s</business>%n" +
-                            "    <date_of_birth>%s</date_of_birth>%n" +
-                            "</participant>%n",
-                    jsonObject.optString("Deelnemer_uuid__c", ""),
-                    method,
-                    jsonObject.optString("Name", ""),
-                    jsonObject.optString("familie_naam__c", ""),
-                    jsonObject.optString("Email__c", ""),
-                    jsonObject.optString("Phone__c", ""),
-                    jsonObject.optString("Bedrijf__c", ""),
-                    jsonObject.optString("date_of_birth__c", "")
-            );
-
-
-            return xmlData;
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-    public void sendToExchange(String message) {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(HOST);
-        factory.setUsername(RABBITMQ_USERNAME);
-        factory.setPassword(RABBITMQ_PASSWORD);
-        factory.setPort(RABBITMQ_PORT);// Set the RabbitMQ server host
-
-        if (!validateXML(message)){
-
-            System.out.println("XML validation failed. participant not sent");
-            return; // if validation fails the method stops and participant is not sent
-        }
-
-        try (Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
-            // Declare the topic exchange
-            //channel.exchangeDeclare(exchange, "topic");
-            // Publish the message to the topic exchange with the specified routing key
-            channel.basicPublish(EXCHANGE, ROUTINGKEY, null, message.getBytes());
-            System.out.println(" [x] Sent '" + message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void editDeelnemer(String uuid, Participant updatedParticipant) {
-
-        ForceApi api = connectToSalesforce();
-        // Retrieve the Deelnemer record JSON string based on UUID
-        String deelnemerJson = getDeelnemer(uuid);
-
-        if (deelnemerJson != null) {
-            try {
-                // Convert JSON string to Map
-                ObjectMapper objectMapper = new ObjectMapper();
-                Map<String, Object> deelnemerRecord = objectMapper.readValue(deelnemerJson, new TypeReference<Map<String, Object>>() {});
-
-                // Prepare fields to update
-                Map<String, Object> updatedFields = new HashMap<>();
-                updatedFields.put("Name", updatedParticipant.getFirstname());
-                updatedFields.put("familie_naam__c", updatedParticipant.getLastname());
-                updatedFields.put("Phone__c", updatedParticipant.getPhone());
-                updatedFields.put("Email__c", updatedParticipant.getEmail());
-                updatedFields.put("Bedrijf__c", updatedParticipant.getBusiness());
-                updatedFields.put("date_of_birth__c", updatedParticipant.getDateOfBirth());
-
-                // Get the record ID
-                String id = (String) deelnemerRecord.get("Id");
-
-                // Prepare the request URL
-                String url = "https://ehb-dev-ed.my.salesforce.com/services/data/v55.0/sobjects/Deelnemer__c/" + id;
-
-                // Prepare the request body
-                String requestBody = objectMapper.writeValueAsString(updatedFields);
-
-                // Create HttpClient
-                HttpClient httpClient = HttpClient.newHttpClient();
-
-                // Create HttpRequest
-                HttpRequest httpRequest = HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Authorization", "Bearer " + api.getSession().getAccessToken()) // Assuming ForceApi has a method like getSession() to get session details
-                        .header("Content-Type", "application/json")
-                        .PUT(HttpRequest.BodyPublishers.ofString(requestBody))
-                        .build();
-
-                // Send the request and handle the response
-                HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-
-                // Check the response status
-                if (response.statusCode() == 200) {
-                    System.out.println("Participant updated");
-                } else {
-                    System.out.println("Failed to update participant: " + response.body());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("No Deelnemer record found with UUID: " + uuid);
-        }
-    }
 
     public static String extractUUID(String inputString) {
         String pattern = "uuid=\"([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\"";

@@ -151,24 +151,30 @@ public class Heartbeat {
     }
     public void sendHeartbeat() throws Exception {
         this.timestamp = (int) (Instant.now().getEpochSecond());
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(HOST);
-        factory.setUsername(RABBITMQ_USERNAME);
-        factory.setPassword(RABBITMQ_PASSWORD);
-        factory.setPort(RABBITMQ_PORT);
 
-        try (Connection connection = factory.newConnection();
-             Channel channel = connection.createChannel()) {
-            String message = "<heartbeat>" +
+        Channel channel = Rabbitmq.getChannel();
+        if (channel == null) {
+            System.err.println("RabbitMQ channel is not initialized. Heartbeat not sent.");
+            return;
+        }
+
+        try {
+            String message = "<heartbeat xmlns=\"http://ehb.local\">" +
                     "<service>" + this.getService() + "</service>" +
                     "<timestamp>" + this.getTimestamp() + "</timestamp>" +
                     "<status>" + this.getStatus() + "</status>" +
                     "<error>" + this.getError() + "</error>" +
                     "</heartbeat>";
-            channel.basicPublish("", QUEUE_NAME_HEARTBEAT, null, message.getBytes("UTF-8"));
 
-        }catch(IOException | TimeoutException e){
-            System.out.println("heartbeat was not sent due to error");
+            if(!validateXML(message)){
+                System.out.println("validation failed heartbeat not sent");
+            }
+            channel.basicPublish("", QUEUE_NAME_HEARTBEAT, null, message.getBytes("UTF-8"));
+            System.out.println("validation successful heartbeat sent");
+
+        }catch(IOException e){
+            e.printStackTrace();
+            System.out.println("heartbeat was not sent due to error" + e.getMessage());
             e.printStackTrace();
 
         }
