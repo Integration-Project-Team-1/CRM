@@ -1,21 +1,42 @@
-/*import org.testng.annotations.Test;
+
+
 import crm.xmlValidation;
-import static org.junit.Assert.*;
-import static org.testng.AssertJUnit.assertTrue;
+import org.junit.Test;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class xmlValidationTest {
 
+    // Sample XML strings for testing
+    private static final String VALID_XML = "<?xml version=\"1.0\"?>"
+            + "<heartbeat xmlns=\"http://ehb.local\">"
+            + "<service>crm</service>"
+            + "<timestamp>1625247600</timestamp>"
+            + "<status>Active</status>"
+            + "<error></error>"
+            + "</heartbeat>";
+
+    private static final String INVALID_XML = "<?xml version=\"1.0\"?>"
+            + "<heartbeat xmlns=\"http://ehb.local\">"
+            + "<service>crm</service>"
+            + "<timestamp>InvalidTimestamp</timestamp>"  // Invalid timestamp format
+            + "<status>Active</status>"
+            + "<error></error>"
+            + "</heartbeat>";
+
     @Test
     public void testValidXML() {
-        String validXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><heartbeat xmlns=\"http://ehb.local\"><service>crm</service><timestamp>123456789</timestamp><status>OK</status></heartbeat>";
-        assertTrue(xmlValidation.validateXML(validXML));
+        // Test with valid XML
+        boolean result = xmlValidation.validateXML(VALID_XML);
+        System.out.println("Validation result for valid XML: " + result); // Debug
+        assertTrue("The XML should be valid", result);
     }
-
 
     @Test
     public void testInvalidXML() {
-        String invalidXML = "<root><child>Test</child>";
-        assertFalse(xmlValidation.validateXML(invalidXML)); // deze moet false zijn om te werken omdat het niet overeenkomt met het XSD
+        // Test with invalid XML
+        boolean result = xmlValidation.validateXML(INVALID_XML);
+        System.out.println("Validation result for invalid XML: " + result);  // Debug
+        assertFalse("The XML should be invalid", result);
     }
 }
-*/
