@@ -39,6 +39,8 @@ public class Salesforce {
     private static List<String> deletedUsersUuidList = new ArrayList<>();
     private String MASTERUUID_URL = System.getenv("MASTERUUID_URL");
 
+    public static ForceApi api = connectToSalesforce();
+
     public static ForceApi connectToSalesforce() {
         String SALESFORCE_USERNAME = System.getenv("SALESFORCE_USERNAME");
         String SALESFORCE_PASSWORD = System.getenv("SALESFORCE_PASSWORD");
@@ -64,7 +66,6 @@ public class Salesforce {
     }
 
     public void createDeelnemer(Participant participant) {
-        ForceApi api = connectToSalesforce();
 
         Map<String, Object> deelnemerFields = new HashMap<>();
         deelnemerFields.put("Name", participant.getFirstname());
@@ -93,7 +94,6 @@ public class Salesforce {
     }
 
     public void createBusiness(Business business) {
-        ForceApi api = connectToSalesforce();
         Map<String, Object> businessFields = new HashMap<>();
         businessFields.put("Name", business.getName());
         businessFields.put("VAT__c", business.getVat());
@@ -115,7 +115,6 @@ public class Salesforce {
     }
 
     public void createConsumption(Consumption consumption) {
-        ForceApi api = connectToSalesforce();
         Map<String, Object> consumptionFields = new HashMap<>();
         consumptionFields.put("Timestamp__c", new Date());
         consumptionFields.put("Name", "food");
@@ -127,7 +126,6 @@ public class Salesforce {
     }
 
     public void updateDeelnemer(String uuid, Participant updatedParticipant) {
-        ForceApi api = connectToSalesforce();
 
         // Retrieve the Deelnemer record JSON string based on UUID
         String deelnemerJson = getDeelnemer(uuid);
@@ -171,7 +169,6 @@ public class Salesforce {
     }
 
     public void deleteDeelnemer(String uuid) {
-        ForceApi api = connectToSalesforce();
         // Retrieve Deelnemer by UUID
         String deelnemerJson = getDeelnemer(uuid);
         if (deelnemerJson != null) {
@@ -198,7 +195,6 @@ public class Salesforce {
 
 
     public String getDeelnemer(String uuid) {
-        ForceApi api = connectToSalesforce();
         // Query the newest Deelnemer__c record and order by CreatedDate in descending order
         String query = "SELECT Id, Name, familie_naam__c, Phone__c, Email__c, Bedrijf__c, date_of_birth__c, Deelnemer_uuid__c FROM Deelnemer__c WHERE Deelnemer_uuid__c = '" + uuid + "'";
 
@@ -225,7 +221,6 @@ public class Salesforce {
     // Method to query the newest Deelnemer__c record
     public String getNewestDeelnemerAsJson(String customObject) {
 
-        ForceApi api = connectToSalesforce();
         // Query the newest Deelnemer__c record and order by CreatedDate in descending order
         String query = "SELECT Id, Name, familie_naam__c, Phone__c, Email__c, Bedrijf__c, date_of_birth__c, Deelnemer_uuid__c FROM " + customObject + " ORDER BY CreatedDate DESC LIMIT 1";
 
@@ -313,7 +308,6 @@ public class Salesforce {
 
     // Method to update a Business__c object
     public void updateBusiness(String uuid, Business updatedBusiness) {
-        ForceApi api = connectToSalesforce();
         // Retrieve the Business record JSON string based on UUID
         String businessJson = getBusiness(uuid);
 
@@ -353,8 +347,6 @@ public class Salesforce {
 
     // Method to delete a Business__c object
     public void deleteBusinessByUUID(String uuid) {
-
-        ForceApi api = connectToSalesforce();
         // Retrieve the Business__c record by UUID
         String businessJson = getBusiness(uuid);
 
@@ -383,7 +375,6 @@ public class Salesforce {
     }
 
     public String getBusiness(String uuid) {
-        ForceApi api = connectToSalesforce();
         System.out.println("i am in getbusiness and api works");
         // SOQL query to retrieve Business__c record by uuid field
         String query = "SELECT Id, Name, VAT__c, Email__c, Access_Code__c, Address__c FROM Business__c WHERE Bedrijf_uuid__c = '" + uuid + "'";
@@ -421,7 +412,7 @@ public class Salesforce {
             // Check if jsonDeelnemer is null, if so, continue the loop
             if (jsonDeelnemer == null) {
                 try {
-                    TimeUnit.SECONDS.sleep(15);
+                    TimeUnit.MINUTES.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -452,7 +443,7 @@ public class Salesforce {
 
             // Wait for 15 seconds before checking again
             try {
-                TimeUnit.SECONDS.sleep(15);
+                TimeUnit.MINUTES.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -473,7 +464,7 @@ public class Salesforce {
             if (jsonDeelnemer == null) {
                 // Wait for 15 seconds before checking again
                 try {
-                    TimeUnit.SECONDS.sleep(15);
+                    TimeUnit.MINUTES.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -547,7 +538,7 @@ public class Salesforce {
 
             // Wait for 15 seconds before checking again
             try {
-                TimeUnit.SECONDS.sleep(15);
+                TimeUnit.MINUTES.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -568,7 +559,7 @@ public class Salesforce {
             // Check if jsonDeelnemer is null, if so, continue the loop
             if (jsonDeelnemer == null) {
                 try {
-                    TimeUnit.SECONDS.sleep(15);
+                    TimeUnit.MINUTES.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -599,7 +590,7 @@ public class Salesforce {
 
             // Wait for 15 seconds before checking again
             try {
-                TimeUnit.SECONDS.sleep(15);
+                TimeUnit.MINUTES.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -620,7 +611,6 @@ public class Salesforce {
     }
 
     public void deleteGewijzigdeDeelnemer(String uuid) {
-        ForceApi api = connectToSalesforce();
         // Retrieve Deelnemer by UUID
         String deelnemerJson = getGewijzigdeDeelnemer(uuid);
         if (deelnemerJson != null) {
@@ -645,7 +635,6 @@ public class Salesforce {
     }
 
     public String getGewijzigdeDeelnemer(String uuid) {
-        ForceApi api = connectToSalesforce();
         // Query the newest Deelnemer__c record and order by CreatedDate in descending order
         String query = "SELECT Id, Name, familie_naam__c, Phone__c, Email__c, Bedrijf__c, date_of_birth__c, Deelnemer_uuid__c FROM gewijzigde_Deelnemer__c WHERE Deelnemer_uuid__c = '" + uuid + "'";
 

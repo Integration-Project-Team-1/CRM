@@ -22,8 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import static crm.Rabbitmq.sendBusinessToExchange;
 import static crm.Rabbitmq.sendToExchange;
-import static crm.Salesforce.connectToSalesforce;
-import static crm.Salesforce.extractUUID;
+import static crm.Salesforce.*;
 import static crm.XML.jsonBusinessToXml;
 import static crm.XML.jsonDeelnemerToXml;
 
@@ -59,8 +58,6 @@ public class Business {
     public static List<String> createdBusinessesUuidList = new ArrayList<>();
     public static List<JSONObject> updatedJsonBusinessesList = new ArrayList<>();
     public static List<String> deletedBusinessesUuidList = new ArrayList<>();
-
-    private static ForceApi api = connectToSalesforce();
 
     public Business() {
     }
@@ -248,7 +245,7 @@ public class Business {
             // Check if jsonDeelnemer is null, if so, continue the loop
             if (jsonBusiness == null) {
                 try {
-                    TimeUnit.SECONDS.sleep(15);
+                    TimeUnit.MINUTES.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -279,7 +276,7 @@ public class Business {
 
             // Wait for 15 seconds before checking again
             try {
-                TimeUnit.SECONDS.sleep(15);
+                TimeUnit.MINUTES.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -300,7 +297,7 @@ public class Business {
             if (jsonBusiness == null) {
                 // Wait for 15 seconds before checking again
                 try {
-                    TimeUnit.SECONDS.sleep(15);
+                    TimeUnit.MINUTES.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -369,7 +366,7 @@ public class Business {
 
             // Wait for 15 seconds before checking again
             try {
-                TimeUnit.SECONDS.sleep(15);
+                TimeUnit.MINUTES.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -377,7 +374,6 @@ public class Business {
     }
 
     public static void deleteGewijzigdeBusiness(String uuid) {
-        ForceApi api = connectToSalesforce();
         // Retrieve Deelnemer by UUID
         String businessJson = getGewijzigdeBusiness(uuid);
         if (businessJson != null) {
@@ -402,7 +398,6 @@ public class Business {
     }
 
     public static String getGewijzigdeBusiness(String uuid) {
-        ForceApi api = connectToSalesforce();
         // Query the newest Deelnemer__c record and order by CreatedDate in descending order
         String query = "SELECT Id, Name, VAT__c, Email__c, Access_Code__c, Address__c FROM gewijzigde_Business__c WHERE Bedrijf_uuid__c = '" + uuid + "'";
 
@@ -439,7 +434,7 @@ public class Business {
             // Check if jsonDeelnemer is null, if so, continue the loop
             if (jsonBusiness == null) {
                 try {
-                    TimeUnit.SECONDS.sleep(15);
+                    TimeUnit.MINUTES.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -470,7 +465,7 @@ public class Business {
 
             // Wait for 15 seconds before checking again
             try {
-                TimeUnit.SECONDS.sleep(15);
+                TimeUnit.MINUTES.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
