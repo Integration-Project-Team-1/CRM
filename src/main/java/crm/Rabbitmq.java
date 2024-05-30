@@ -22,21 +22,36 @@ public class Rabbitmq {
 
     private static Connection connection;
     private static Channel channel;
+    private static final int RETRY_INTERVAL_MS = 5000; // Retry interval in milliseconds
 
     // Static block to initialize the connection and channel once
-    static {
-        try {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(HOST);
-            factory.setUsername(RABBITMQ_USERNAME);
-            factory.setPassword(RABBITMQ_PASSWORD);
-            factory.setPort(RABBITMQ_PORT);
 
-            connection = factory.newConnection();
-            channel = connection.createChannel();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Failed to initialize RabbitMQ connection and channel: " + e.getMessage());
+    static {
+        initializeConnection();
+    }
+    private static void initializeConnection() {
+        while (true) {
+            try {
+                ConnectionFactory factory = new ConnectionFactory();
+                factory.setHost(HOST);
+                factory.setUsername(RABBITMQ_USERNAME);
+                factory.setPassword(RABBITMQ_PASSWORD);
+                factory.setPort(RABBITMQ_PORT);
+
+                connection = factory.newConnection();
+                channel = connection.createChannel();
+                System.out.println("RabbitMQ connection and channel initialized successfully.");
+                break; // Exit the loop if connection is successful
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Failed to initialize RabbitMQ connection and channel: " + e.getMessage());
+                try {
+                    Thread.sleep(RETRY_INTERVAL_MS); // Wait before retrying
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Thread interrupted during retry interval", ie);
+                }
+            }
         }
     }
 
